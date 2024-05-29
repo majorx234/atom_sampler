@@ -1,9 +1,17 @@
 use bus::BusReader;
 use crossbeam_channel::{Receiver, Sender};
 use jack;
+use ringbuf::Producer;
+use ringbuf::SharedRb;
+use std::mem::MaybeUninit;
+use std::sync::Arc;
 use std::{process::exit, thread, time::Duration};
 
-pub fn start_jack_thread(mut rx_close: BusReader<bool>) -> std::thread::JoinHandle<()> {
+pub fn start_jack_thread(
+    mut rx_close: BusReader<bool>,
+    mut ringbuffer_left_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_right_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         let mut run: bool = true;
         let (client, _status) =
@@ -13,6 +21,12 @@ pub fn start_jack_thread(mut rx_close: BusReader<bool>) -> std::thread::JoinHand
         // register ports:
         let mut out_a = client.register_port("as_out_l", jack::AudioOut).unwrap();
         let mut out_b = client.register_port("as_out_r", jack::AudioOut).unwrap();
+        let in_a = client
+            .register_port("as_in_l", jack::AudioIn::default())
+            .unwrap();
+        let in_b = client
+            .register_port("as_in_r", jack::AudioIn::default())
+            .unwrap();
         let _midi_in = client.register_port("as_midi_in", jack::MidiIn).unwrap();
         let mut frame_size = client.buffer_size() as usize;
         if client.set_buffer_size(frame_size as u32).is_ok() {
@@ -38,9 +52,15 @@ pub fn start_jack_thread(mut rx_close: BusReader<bool>) -> std::thread::JoinHand
         let process_callback = move |_: &jack::Client, ps: &jack::ProcessScope| -> jack::Control {
             let out_a_p = out_a.as_mut_slice(ps);
             let out_b_p = out_b.as_mut_slice(ps);
+            let in_a_p = in_a.as_slice(ps);
+            let in_b_p = in_b.as_slice(ps);
             // zero the ringbuffer
             out_a_p.fill(0.0);
             out_b_p.fill(0.0);
+
+            ringbuffer_left_in.push_iter(&mut in_a_p.iter().copied());
+            ringbuffer_right_in.push_iter(&mut in_b_p.iter().copied());
+
             jack::Control::Continue
         };
         let process = jack::ClosureProcessHandler::new(process_callback);
