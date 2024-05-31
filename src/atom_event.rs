@@ -1,10 +1,12 @@
-enum Type {
+#[derive(PartialEq)]
+pub enum Type {
     Recording,
     ChangeStartAdress,
     ChangeEndAdress,
     Playback,
 }
 
-struct AtomEvent {
-    event_type: Type,
+pub struct AtomEvent {
+    pub event_type: Type,
+    pub start: bool,
 }

@@ -1,5 +1,7 @@
+use crate::atom_event::AtomEvent;
+use crate::atom_event::Type;
 use bus::BusReader;
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::Receiver;
 use jack;
 use ringbuf::Producer;
 use ringbuf::SharedRb;
@@ -11,6 +13,7 @@ pub fn start_jack_thread(
     mut rx_close: BusReader<bool>,
     mut ringbuffer_left_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
     mut ringbuffer_right_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    rx_atom_event: Receiver<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         let mut run: bool = true;
@@ -49,17 +52,38 @@ pub fn start_jack_thread(
         } else {
             exit(-1);
         }
+
+        // state section
+        let mut state_recording = false;
+
         let process_callback = move |_: &jack::Client, ps: &jack::ProcessScope| -> jack::Control {
             let out_a_p = out_a.as_mut_slice(ps);
             let out_b_p = out_b.as_mut_slice(ps);
             let in_a_p = in_a.as_slice(ps);
             let in_b_p = in_b.as_slice(ps);
+
+            let opt_atom_event: Option<AtomEvent> =
+                if let Ok(rx_atome_event) = rx_atom_event.try_recv() {
+                    Some(rx_atome_event)
+                } else {
+                    None
+                };
+
+            // setup states with event
+            if let Some(atom_event) = opt_atom_event {
+                if atom_event.event_type == Type::Recording {
+                    state_recording = atom_event.start;
+                }
+            }
+
             // zero the ringbuffer
             out_a_p.fill(0.0);
             out_b_p.fill(0.0);
 
-            ringbuffer_left_in.push_iter(&mut in_a_p.iter().copied());
-            ringbuffer_right_in.push_iter(&mut in_b_p.iter().copied());
+            if state_recording {
+                ringbuffer_left_in.push_iter(&mut in_a_p.iter().copied());
+                ringbuffer_right_in.push_iter(&mut in_b_p.iter().copied());
+            }
 
             jack::Control::Continue
         };
