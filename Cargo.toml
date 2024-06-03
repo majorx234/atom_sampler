@@ -12,6 +12,10 @@ path = "src/lib.rs"
 name = "atom_sampler_gui"
 path = "src/bin/atom_sampler_gui/main.rs"
 
+[[bin]]
+name = "atom_sampler_gui_mockup"
+path = "src/bin/atom_sampler_gui_mockup/main.rs"
+
 [dependencies]
 jack = { version = "0.11.4" }
 crossbeam-channel = { version = "0.5.6" }
