@@ -1,13 +1,25 @@
 use atom_sampler_lib::ui::elements::pad_button;
 use eframe::egui::{self, ViewportCommand};
 
+pub struct DebugConsole {
+    pub n_items: usize,
+    pub msgs: Vec<String>,
+}
+
 pub struct MockupGUI {
     wave_loaded: bool,
+    console: DebugConsole,
 }
 
 impl Default for MockupGUI {
     fn default() -> Self {
-        Self { wave_loaded: false }
+        Self {
+            wave_loaded: false,
+            console: DebugConsole {
+                n_items: 0,
+                msgs: Vec::new(),
+            },
+        }
     }
 }
 
