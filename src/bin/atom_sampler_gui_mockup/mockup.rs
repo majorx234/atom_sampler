@@ -1,10 +1,5 @@
-use atom_sampler_lib::ui::elements::pad_button;
+use atom_sampler_lib::ui::elements::{pad_button, DebugConsole};
 use eframe::egui::{self, ViewportCommand};
-
-pub struct DebugConsole {
-    pub n_items: usize,
-    pub msgs: Vec<String>,
-}
 
 pub struct MockupGUI {
     wave_loaded: bool,
@@ -31,7 +26,8 @@ impl eframe::App for MockupGUI {
             })
         });
         egui::CentralPanel::default().show(ctx, |ui| {
-            pad_button(ui, &self.wave_loaded);
+            ui.add(pad_button(&self.wave_loaded));
+            self.console.debug_console_ui(ui);
         });
     }
 }

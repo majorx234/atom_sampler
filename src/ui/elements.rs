@@ -3,7 +3,7 @@ use eframe::{
     epaint::Stroke,
 };
 
-pub fn pad_button(ui: &mut egui::Ui, status_wave_loaded: &bool) -> egui::Response {
+pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &bool) -> egui::Response {
     let width = 4.0;
     let height = 4.0;
     let desired_size = ui.spacing().interact_size.y * egui::vec2(width, height);
@@ -18,6 +18,9 @@ pub fn pad_button(ui: &mut egui::Ui, status_wave_loaded: &bool) -> egui::Respons
     }
     response
 }
+pub fn pad_button(status_wave_loaded: &bool) -> impl egui::Widget + '_ {
+    move |ui: &mut egui::Ui| pad_button_ui(ui, status_wave_loaded)
+}
 
 pub struct DebugConsole {
     pub n_items: usize,
@@ -25,7 +28,7 @@ pub struct DebugConsole {
 }
 
 impl DebugConsole {
-    pub fn debug_console(self, ui: &mut egui::Ui) {
+    pub fn debug_console_ui(&self, ui: &mut egui::Ui) {
         let n_items = self.msgs.len();
         let text_style = egui::TextStyle::Body;
         let row_height = ui.text_style_height(&text_style);
