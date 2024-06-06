@@ -24,22 +24,24 @@ pub struct DebugConsole {
     pub msgs: Vec<String>,
 }
 
-pub fn debug_console(ui: &mut egui::Ui, console: DebugConsole) {
-    let n_items = console.msgs.len();
-    let text_style = egui::TextStyle::Body;
-    let row_height = ui.text_style_height(&text_style);
-    if n_items > 0 {
-        ScrollArea::vertical()
-            .stick_to_bottom(true)
-            .min_scrolled_height(600.0)
-            .max_height(600.0)
-            .min_scrolled_width(500.0)
-            .max_width(500.0)
-            .show_rows(ui, row_height, n_items, |ui, row_range| {
-                for row in row_range {
-                    let text = format!("{} {}", row, console.msgs[row]);
-                    ui.label(text);
-                }
-            });
+impl DebugConsole {
+    pub fn debug_console(self, ui: &mut egui::Ui) {
+        let n_items = self.msgs.len();
+        let text_style = egui::TextStyle::Body;
+        let row_height = ui.text_style_height(&text_style);
+        if n_items > 0 {
+            ScrollArea::vertical()
+                .stick_to_bottom(true)
+                .min_scrolled_height(600.0)
+                .max_height(600.0)
+                .min_scrolled_width(500.0)
+                .max_width(500.0)
+                .show_rows(ui, row_height, n_items, |ui, row_range| {
+                    for row in row_range {
+                        let text = format!("{} {}", row, self.msgs[row]);
+                        ui.label(text);
+                    }
+                });
+        }
     }
 }
