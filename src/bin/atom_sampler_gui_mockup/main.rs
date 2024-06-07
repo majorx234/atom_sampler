@@ -1,9 +1,16 @@
+use std::str::FromStr;
+
+use atom_sampler_lib::ui::elements::DebugConsole;
 use eframe::{self, egui::ViewportBuilder};
 mod mockup;
 use mockup::MockupGUI;
 
 fn main() {
-    let mockup_gui = MockupGUI::default();
+    let msgs: Vec<String> = Vec::new();
+    let mockup_gui = MockupGUI {
+        wave_loaded: false,
+        console: DebugConsole { msgs, n_items: 3 },
+    };
     let options = eframe::NativeOptions {
         viewport: ViewportBuilder::default().with_inner_size([600.0, 600.0]),
         ..Default::default()
