@@ -28,18 +28,21 @@ pub struct DebugConsole {
 }
 
 impl DebugConsole {
+    pub fn add_entry(&mut self, msg: String) {
+        self.msgs.push(msg);
+        self.n_items = self.msgs.len();
+    }
     pub fn debug_console_ui(&self, ui: &mut egui::Ui) {
-        let n_items = self.msgs.len();
         let text_style = egui::TextStyle::Body;
         let row_height = ui.text_style_height(&text_style);
-        if n_items > 0 {
+        if self.n_items > 0 {
             ScrollArea::vertical()
                 .stick_to_bottom(true)
                 .min_scrolled_height(600.0)
                 .max_height(600.0)
                 .min_scrolled_width(500.0)
                 .max_width(500.0)
-                .show_rows(ui, row_height, n_items, |ui, row_range| {
+                .show_rows(ui, row_height, self.n_items, |ui, row_range| {
                     for row in row_range {
                         let text = format!("{} {}", row, self.msgs[row]);
                         ui.label(text);
