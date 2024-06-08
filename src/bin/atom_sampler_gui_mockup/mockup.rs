@@ -20,9 +20,6 @@ impl Default for MockupGUI {
 
 impl eframe::App for MockupGUI {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let mut pad_button_clicked = false;
-        let mut status_wave_loaded = false;
-
         egui::TopBottomPanel::top("control").show(ctx, |ui| {
             ui.vertical(|ui| {
                 ui.heading("MockupGui");
@@ -41,8 +38,20 @@ impl eframe::App for MockupGUI {
                     && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
                 {
                     self.console.add_entry("clicked".to_string());
-                } else if input.pointer.button_released(egui::PointerButton::Primary) {
+                } else if input.pointer.button_released(egui::PointerButton::Primary)
+                    && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
+                {
                     self.console.add_entry("released".to_string());
+                } else if input.pointer.button_released(egui::PointerButton::Primary)
+                    && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
+                    && !input.raw.dropped_files.is_empty()
+                {
+                    for file in input.raw.dropped_files.iter() {
+                        if let Some(ref path) = file.path {
+                            self.console
+                                .add_entry(path.to_str().expect("no real path").to_string());
+                        }
+                    }
                 }
             });
             self.console.debug_console_ui(ui);

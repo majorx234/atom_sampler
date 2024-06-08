@@ -9,12 +9,12 @@ pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &bool) -> egui::Resp
     let height = 4.0;
     let desired_size = ui.spacing().interact_size.y * egui::vec2(width, height);
     let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
-    // TODO: check if clicked
+
     if response.clicked() {
         clicked = true;
         response.mark_changed(); // report back that the value changed
+                                 // TODO animation when clicked
     }
-
     if ui.is_rect_visible(response.rect) {
         let visuals = ui.style().visuals.clone();
         let rounding = rect.height() / 2.0;
