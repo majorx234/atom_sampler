@@ -17,9 +17,13 @@ pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &bool) -> egui::Resp
     }
     if ui.is_rect_visible(response.rect) {
         let visuals = ui.style().visuals.clone();
-        let rounding = rect.height() / 2.0;
-        ui.painter()
-            .rect(rect, rounding, visuals.extreme_bg_color, Stroke::NONE);
+        let rounding = rect.height() / 8.0;
+        let color = if clicked {
+            visuals.warn_fg_color
+        } else {
+            visuals.extreme_bg_color
+        };
+        ui.painter().rect(rect, rounding, color, Stroke::NONE);
     }
     response
 }
