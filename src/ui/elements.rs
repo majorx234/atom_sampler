@@ -31,7 +31,9 @@ pub fn pad_button_ui(
     }
     ui.ctx().input(|i| {
         if !i.raw.dropped_files.is_empty() {
-            dropped_files.append(&mut i.raw.dropped_files.clone());
+            if rect.contains(i.pointer.interact_pos().unwrap()) {
+                dropped_files.append(&mut i.raw.dropped_files.clone());
+            }
         }
     });
     response
