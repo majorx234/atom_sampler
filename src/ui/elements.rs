@@ -3,7 +3,11 @@ use eframe::{
     epaint::Stroke,
 };
 
-pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &mut bool) -> egui::Response {
+pub fn pad_button_ui(
+    ui: &mut egui::Ui,
+    status_wave_loaded: &mut bool,
+    dropped_files: &mut Vec<egui::DroppedFile>,
+) -> egui::Response {
     let mut clicked = false;
     let width = 4.0;
     let height = 4.0;
@@ -27,14 +31,16 @@ pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &mut bool) -> egui::
     }
     ui.ctx().input(|i| {
         if !i.raw.dropped_files.is_empty() {
-            // dropped_files = i.raw.dropped_files;
-            *status_wave_loaded = true;
+            dropped_files.append(&mut i.raw.dropped_files.clone());
         }
     });
     response
 }
-pub fn pad_button(status_wave_loaded: &mut bool) -> impl egui::Widget + '_ {
-    move |ui: &mut egui::Ui| pad_button_ui(ui, status_wave_loaded)
+pub fn pad_button<'a>(
+    status_wave_loaded: &'a mut bool,
+    dropped_files: &'a mut Vec<egui::DroppedFile>,
+) -> impl egui::Widget + 'a {
+    move |ui: &mut egui::Ui| pad_button_ui(ui, status_wave_loaded, dropped_files)
 }
 
 pub struct DebugConsole {

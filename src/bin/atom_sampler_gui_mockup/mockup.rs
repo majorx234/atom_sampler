@@ -26,13 +26,30 @@ impl eframe::App for MockupGUI {
             })
         });
         egui::CentralPanel::default().show(ctx, |ui| {
-            let pad_button_clicked_rect = pad_button_ui(ui, &mut self.wave_loaded)
-                .interact(egui::Sense {
-                    click: true,
-                    drag: true,
-                    focusable: true,
-                })
-                .rect;
+            let mut dropped_files: Vec<egui::DroppedFile> = Vec::new();
+            let pad_button_clicked_rect =
+                pad_button_ui(ui, &mut self.wave_loaded, &mut dropped_files)
+                    .interact(egui::Sense {
+                        click: true,
+                        drag: true,
+                        focusable: true,
+                    })
+                    .rect;
+            if !dropped_files.is_empty() {
+                self.console.add_entry("droped file:".to_string());
+                for (idx, file) in dropped_files.iter().enumerate() {
+                    let filepath = file.path.clone().expect("no file path");
+                    let file_msg = format!(
+                        "file {}: {} - Mime: {}, Filepath: {}",
+                        idx,
+                        file.name,
+                        file.mime,
+                        filepath.as_path().display()
+                    );
+                    self.console.add_entry(file_msg);
+                }
+            }
+
             ui.input(|input| {
                 if input.pointer.button_pressed(egui::PointerButton::Primary)
                     && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
@@ -61,9 +78,5 @@ impl eframe::App for MockupGUI {
             });
             self.console.debug_console_ui(ui);
         });
-        if self.wave_loaded == true {
-            self.console.add_entry("droped file".to_string());
-        }
-        self.wave_loaded = false;
     }
 }
