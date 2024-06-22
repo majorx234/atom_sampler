@@ -26,7 +26,7 @@ impl eframe::App for MockupGUI {
             })
         });
         egui::CentralPanel::default().show(ctx, |ui| {
-            let pad_button_clicked_rect = pad_button_ui(ui, &self.wave_loaded)
+            let pad_button_clicked_rect = pad_button_ui(ui, &mut self.wave_loaded)
                 .interact(egui::Sense {
                     click: true,
                     drag: true,
@@ -61,5 +61,9 @@ impl eframe::App for MockupGUI {
             });
             self.console.debug_console_ui(ui);
         });
+        if self.wave_loaded == true {
+            self.console.add_entry("droped file".to_string());
+        }
+        self.wave_loaded = false;
     }
 }

@@ -3,7 +3,7 @@ use eframe::{
     epaint::Stroke,
 };
 
-pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &bool) -> egui::Response {
+pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &mut bool) -> egui::Response {
     let mut clicked = false;
     let width = 4.0;
     let height = 4.0;
@@ -25,9 +25,15 @@ pub fn pad_button_ui(ui: &mut egui::Ui, status_wave_loaded: &bool) -> egui::Resp
         };
         ui.painter().rect(rect, rounding, color, Stroke::NONE);
     }
+    ui.ctx().input(|i| {
+        if !i.raw.dropped_files.is_empty() {
+            // dropped_files = i.raw.dropped_files;
+            *status_wave_loaded = true;
+        }
+    });
     response
 }
-pub fn pad_button(status_wave_loaded: &bool) -> impl egui::Widget + '_ {
+pub fn pad_button(status_wave_loaded: &mut bool) -> impl egui::Widget + '_ {
     move |ui: &mut egui::Ui| pad_button_ui(ui, status_wave_loaded)
 }
 
