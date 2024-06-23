@@ -61,19 +61,6 @@ impl eframe::App for MockupGUI {
                     if pad_button_clicked_rect.contains(input.pointer.interact_pos().unwrap()) {
                         self.console.add_entry("released".to_string());
                     }
-                } else if input.pointer.button_released(egui::PointerButton::Primary)
-                    && input.pointer.interact_pos().is_some()
-                {
-                    if pad_button_clicked_rect.contains(input.pointer.interact_pos().unwrap())
-                        && !input.raw.dropped_files.is_empty()
-                    {
-                        for file in input.raw.dropped_files.iter() {
-                            if let Some(ref path) = file.path {
-                                self.console
-                                    .add_entry(path.to_str().expect("no real path").to_string());
-                            }
-                        }
-                    }
                 }
             });
             self.console.debug_console_ui(ui);
