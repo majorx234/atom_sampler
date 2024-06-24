@@ -7,5 +7,16 @@ struct WaveHandler {
     is_loaded: bool,
     path: Option<PathBuf>,
     rx_command: Receiver<WaveCommands>,
-    processing: thread::JoinHandle<()>,
+    processing: Option<thread::JoinHandle<()>>,
+}
+
+impl WaveHandler {
+    pub fn new(rx_command: Receiver<WaveCommands>) -> Self {
+        WaveHandler {
+            is_loaded: false,
+            path: None,
+            rx_command,
+            processing: None,
+        }
+    }
 }
