@@ -3,6 +3,22 @@ use eframe::{
     epaint::Stroke,
 };
 
+pub fn wave_plot_ui(
+    ui: &mut egui::Ui,
+    wave: &Vec<f32>,
+    width: f32,
+    height: f32,
+    dpi: usize,
+) -> egui::Response {
+    let desired_size = ui.spacing().interact_size.y * egui::vec2(width, height);
+    let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+    let visuals = ui.style().visuals.clone();
+    ui.painter()
+        .rect(rect, 0.0, visuals.panel_fill, Stroke::NONE);
+
+    response
+}
+
 pub fn pad_button_ui(
     ui: &mut egui::Ui,
     status_wave_loaded: &mut bool,
