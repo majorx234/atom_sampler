@@ -8,7 +8,7 @@ struct WavePlotter {
     wave_loaded: bool,
     width: f32,
     height: f32,
-    wave_plot: Vec<(f32, f32)>,
+    limits: Vec<(f32, f32)>,
     dpi: usize,
 }
 
@@ -19,11 +19,11 @@ impl WavePlotter {
             wave_loaded: false,
             width,
             height,
-            wave_plot: Vec::new(),
-            dpi: 1,
+            limits: Vec::new(),
+            dpi: 100,
         }
     }
-    pub fn wave_plot_ui(&self, ui: &mut egui::Ui, wave: &[f32], dpi: usize) -> egui::Response {
+    pub fn wave_plot_ui(&self, ui: &mut egui::Ui, dpi: usize) -> egui::Response {
         let desired_size = ui.spacing().interact_size.y * egui::vec2(self.width, self.height);
         let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
         let visuals = ui.style().visuals.clone();
@@ -31,6 +31,23 @@ impl WavePlotter {
             .rect(rect, 0.0, visuals.panel_fill, Stroke::NONE);
 
         response
+    }
+    pub fn load_wave(&mut self, wave: &[f32]) {
+        let segments: usize = (self.width * self.dpi as f32) as usize;
+        let sample_per_segment = wave.len() / segments;
+        // ToDo handle residium, fill rest up with zeros
+        let mut limits: Vec<(f32, f32)> = vec![(0.0, 0.0); segments];
+        for segment in 0..segments {
+            for sample in 0..sample_per_segment {
+                let j = segment * sample_per_segment + sample;
+                if wave[j] < limits[segment].0 {
+                    limits[segment].0 = wave[j];
+                } else if wave[j] > limits[segment].1 {
+                    limits[segment].1 = wave[j];
+                }
+            }
+        }
+        self.limits = limits;
     }
 }
 
