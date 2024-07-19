@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, ScrollArea},
+    egui::{self, Color32, Rangef, Rgba, ScrollArea},
     epaint::Stroke,
 };
 
@@ -29,11 +29,19 @@ impl WavePlotter {
         let visuals = ui.style().visuals.clone();
         ui.painter()
             .rect(rect, 0.0, visuals.panel_fill, Stroke::NONE);
+        for (x, (y_low, y_high)) in self.limits.iter().enumerate() {
+            ui.painter().vline(
+                x as f32,
+                Rangef::new(*y_low, *y_high),
+                Stroke::new(1.0, Color32::GREEN),
+            );
+        }
 
         response
     }
     pub fn load_wave(&mut self, wave: &[f32]) {
         let segments: usize = (self.width * self.dpi as f32) as usize;
+        assert!(segments > wave.len());
         let sample_per_segment = wave.len() / segments;
         // ToDo handle residium, fill rest up with zeros
         let mut limits: Vec<(f32, f32)> = vec![(0.0, 0.0); segments];
