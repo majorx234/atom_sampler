@@ -1,9 +1,21 @@
 use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole};
+use bus::Bus;
 use eframe::egui::{self, ViewportCommand, Widget};
 
 pub struct AtomSamplerApp {
     pub wave_loaded: bool,
     pub console: DebugConsole,
+    pub tx_close: Option<Bus<bool>>,
+}
+
+impl AtomSamplerApp {
+    pub fn new(wave_loaded: bool, console: DebugConsole, tx_close: Bus<bool>) -> Self {
+        Self {
+            wave_loaded,
+            console,
+            tx_close: Some(tx_close),
+        }
+    }
 }
 
 impl Default for AtomSamplerApp {
@@ -14,6 +26,7 @@ impl Default for AtomSamplerApp {
                 n_items: 0,
                 msgs: Vec::new(),
             },
+            tx_close: None,
         }
     }
 }

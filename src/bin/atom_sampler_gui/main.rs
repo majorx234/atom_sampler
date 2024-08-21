@@ -26,10 +26,7 @@ fn main() {
 
     let msgs: Vec<String> = Vec::new();
     let n_items = msgs.len();
-    let atom_sampler_app = AtomSamplerApp {
-        wave_loaded: false,
-        console: DebugConsole { msgs, n_items },
-    };
+    let atom_sampler_app = AtomSamplerApp::new(false, DebugConsole { msgs, n_items }, tx_close);
 
     let options = eframe::NativeOptions {
         viewport: ViewportBuilder::default().with_inner_size([600.0, 600.0]),
