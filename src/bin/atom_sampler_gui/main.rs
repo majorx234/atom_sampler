@@ -1,4 +1,4 @@
-use atom_sampler_lib::{jackprocess::start_jack_thread, ui::elements::DebugConsole};
+use atom_sampler_lib::{atom_event, jackprocess::start_jack_thread, ui::elements::DebugConsole};
 use eframe::{self, egui::ViewportBuilder};
 mod atom_sampler_app;
 use atom_sampler_app::AtomSamplerApp;
@@ -26,7 +26,12 @@ fn main() {
 
     let msgs: Vec<String> = Vec::new();
     let n_items = msgs.len();
-    let atom_sampler_app = AtomSamplerApp::new(false, DebugConsole { msgs, n_items }, tx_close);
+    let atom_sampler_app = AtomSamplerApp::new(
+        false,
+        DebugConsole { msgs, n_items },
+        tx_close,
+        tx_atom_event,
+    );
 
     let options = eframe::NativeOptions {
         viewport: ViewportBuilder::default().with_inner_size([600.0, 600.0]),

@@ -1,19 +1,30 @@
-use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole};
+use atom_sampler_lib::{
+    atom_event::AtomEvent,
+    ui::elements::{pad_button, pad_button_ui, DebugConsole},
+};
 use bus::Bus;
+use crossbeam_channel::Sender;
 use eframe::egui::{self, ViewportCommand, Widget};
 
 pub struct AtomSamplerApp {
     pub wave_loaded: bool,
     pub console: DebugConsole,
     pub tx_close: Option<Bus<bool>>,
+    pub tx_atom_event: Option<Sender<AtomEvent>>,
 }
 
 impl AtomSamplerApp {
-    pub fn new(wave_loaded: bool, console: DebugConsole, tx_close: Bus<bool>) -> Self {
+    pub fn new(
+        wave_loaded: bool,
+        console: DebugConsole,
+        tx_close: Bus<bool>,
+        tx_atom_event: Sender<AtomEvent>,
+    ) -> Self {
         Self {
             wave_loaded,
             console,
             tx_close: Some(tx_close),
+            tx_atom_event: Some(tx_atom_event),
         }
     }
 }
@@ -27,6 +38,7 @@ impl Default for AtomSamplerApp {
                 msgs: Vec::new(),
             },
             tx_close: None,
+            tx_atom_event: None,
         }
     }
 }
