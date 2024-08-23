@@ -1,3 +1,5 @@
+use std::{mem::MaybeUninit, sync::Arc};
+
 use atom_sampler_lib::{
     atom_event::AtomEvent,
     ui::elements::{pad_button, pad_button_ui, DebugConsole},
@@ -5,12 +7,17 @@ use atom_sampler_lib::{
 use bus::Bus;
 use crossbeam_channel::Sender;
 use eframe::egui::{self, ViewportCommand, Widget};
+use ringbuf::{Consumer, SharedRb};
 
 pub struct AtomSamplerApp {
     pub wave_loaded: bool,
     pub console: DebugConsole,
     pub tx_close: Option<Bus<bool>>,
     pub tx_atom_event: Option<Sender<AtomEvent>>,
+    pub ringbuffer_left_out:
+        Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
+    pub ringbuffer_right_out:
+        Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
 }
 
 impl AtomSamplerApp {
@@ -19,12 +26,20 @@ impl AtomSamplerApp {
         console: DebugConsole,
         tx_close: Bus<bool>,
         tx_atom_event: Sender<AtomEvent>,
+        ringbuffer_left_out: Option<
+            Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+        >,
+        ringbuffer_right_out: Option<
+            Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+        >,
     ) -> Self {
         Self {
             wave_loaded,
             console,
             tx_close: Some(tx_close),
             tx_atom_event: Some(tx_atom_event),
+            ringbuffer_left_out,
+            ringbuffer_right_out,
         }
     }
 }
@@ -39,6 +54,8 @@ impl Default for AtomSamplerApp {
             },
             tx_close: None,
             tx_atom_event: None,
+            ringbuffer_left_out: None,
+            ringbuffer_right_out: None,
         }
     }
 }

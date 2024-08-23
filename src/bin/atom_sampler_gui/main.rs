@@ -15,7 +15,7 @@ fn main() {
     let (ringbuffer_right_in, ringbuffer_right_out) = ringbuffer_right.split();
 
     let mut tx_close = bus::Bus::<bool>::new(1);
-    let mut rx1_close = tx_close.add_rx();
+    let rx1_close = tx_close.add_rx();
     let (tx_atom_event, rx_atom_event) = unbounded();
     let jack_thread = start_jack_thread(
         rx1_close,
@@ -31,6 +31,8 @@ fn main() {
         DebugConsole { msgs, n_items },
         tx_close,
         tx_atom_event,
+        Some(ringbuffer_left_out),
+        Some(ringbuffer_right_out),
     );
 
     let options = eframe::NativeOptions {
