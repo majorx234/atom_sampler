@@ -62,6 +62,22 @@ impl Default for AtomSamplerApp {
 
 impl eframe::App for AtomSamplerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        match &mut self.ringbuffer_left_out {
+            Some(ringbuffer_left_out) => {
+                while ringbuffer_left_out.len() > 512 {
+                    let mut values: Vec<f32> = vec![0.0; 512];
+                }
+            }
+            None => (),
+        };
+        match &mut self.ringbuffer_right_out {
+            Some(ringbuffer_right_out) => {
+                while ringbuffer_right_out.len() > 512 {
+                    let mut values: Vec<f32> = vec![0.0; 512];
+                }
+            }
+            None => (),
+        };
         egui::TopBottomPanel::top("control").show(ctx, |ui| {
             ui.vertical(|ui| {
                 ui.heading("MockupGui");
