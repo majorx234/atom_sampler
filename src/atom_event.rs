@@ -1,8 +1,8 @@
 #[derive(PartialEq)]
 pub enum Type {
     Recording,
-    ChangeStartAdress,
-    ChangeEndAdress,
+    ChangeStartAdress(usize),
+    ChangeEndAdress(usize),
     Playback,
 }
 
