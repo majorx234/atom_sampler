@@ -3,6 +3,7 @@ use crate::atom_event::Type;
 use bus::BusReader;
 use crossbeam_channel::Receiver;
 use jack;
+use ringbuf::Consumer;
 use ringbuf::Producer;
 use ringbuf::SharedRb;
 use std::mem::MaybeUninit;
@@ -13,6 +14,8 @@ pub fn start_jack_thread(
     mut rx_close: BusReader<bool>,
     mut ringbuffer_left_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
     mut ringbuffer_right_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    ringbuffer_left_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    ringbuffer_right_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
     rx_atom_event: Receiver<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
