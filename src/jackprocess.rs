@@ -71,8 +71,13 @@ pub fn start_jack_thread(
 
             // setup states with event
             if let Some(atom_event) = opt_atom_event {
-                if atom_event.event_type == Type::Recording {
-                    state_recording = atom_event.start;
+                match atom_event.event_type {
+                    Type::Recording => {
+                        state_recording = atom_event.start;
+                    }
+                    Type::Playback => {}
+                    Type::ChangeStartAdress(adress) => {}
+                    Type::ChangeEndAdress(adress) => {}
                 }
             }
 
