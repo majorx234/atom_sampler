@@ -18,7 +18,25 @@ pub fn start_wave_manager(
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         let mut run: bool = true;
+        let mut state_recording = false;
         while run {
+            let opt_atom_event: Option<AtomEvent> =
+                if let Ok(rx_atome_event) = rx_atom_event.try_recv() {
+                    Some(rx_atome_event)
+                } else {
+                    None
+                };
+            if let Some(atom_event) = opt_atom_event {
+                match atom_event.event_type {
+                    Type::Recording => {
+                        state_recording = atom_event.start;
+                    }
+                    Type::Playback => {}
+                    Type::ChangeStartAdress(adress) => {}
+                    Type::ChangeEndAdress(adress) => {}
+                }
+            }
+
             thread::sleep(Duration::from_millis(100));
             match rx_close.recv() {
                 Ok(running) => run = running,
