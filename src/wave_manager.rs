@@ -19,6 +19,9 @@ pub fn start_wave_manager(
     std::thread::spawn(move || {
         let mut run: bool = true;
         let mut state_recording = false;
+
+        let mut wave_left = vec![0.0; 192000];
+        let mut wave_right = vec![0.0; 192000];
         while run {
             let opt_atom_event: Option<AtomEvent> =
                 if let Ok(rx_atome_event) = rx_atom_event.try_recv() {
@@ -36,6 +39,8 @@ pub fn start_wave_manager(
                     Type::ChangeEndAdress(adress) => {}
                 }
             }
+
+            if (state_recording) {}
 
             thread::sleep(Duration::from_millis(100));
             match rx_close.recv() {
