@@ -14,8 +14,8 @@ pub fn start_jack_thread(
     mut rx_close: BusReader<bool>,
     mut ringbuffer_left_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
     mut ringbuffer_right_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    ringbuffer_left_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    ringbuffer_right_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_left_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_right_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
     rx_atom_event: Receiver<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
@@ -58,6 +58,7 @@ pub fn start_jack_thread(
 
         // state section
         let mut state_recording = false;
+        let mut state_playback = false;
 
         let process_callback = move |_: &jack::Client, ps: &jack::ProcessScope| -> jack::Control {
             let out_a_p = out_a.as_mut_slice(ps);
@@ -78,7 +79,9 @@ pub fn start_jack_thread(
                     Type::Recording(state) => {
                         state_recording = state;
                     }
-                    Type::Playback(state) => {}
+                    Type::Playback(state) => {
+                        state_playback = state;
+                    }
                     Type::ChangeStartAdress(adress) => {}
                     Type::ChangeEndAdress(adress) => {}
                 }
@@ -91,6 +94,14 @@ pub fn start_jack_thread(
             if state_recording {
                 ringbuffer_left_in.push_iter(&mut in_a_p.iter().copied());
                 ringbuffer_right_in.push_iter(&mut in_b_p.iter().copied());
+            }
+            if state_playback {
+                for (n, item) in ringbuffer_left_out.pop_iter().enumerate() {
+                    out_a_p[n] = item;
+                }
+                for (n, item) in ringbuffer_right_out.pop_iter().enumerate() {
+                    out_b_p[n] = item;
+                }
             }
 
             jack::Control::Continue
