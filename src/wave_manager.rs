@@ -19,11 +19,14 @@ pub fn start_wave_manager(
     std::thread::spawn(move || {
         let mut run: bool = true;
         let mut state_recording = false;
+        let mut state_playback = false;
 
         let mut wave_left = vec![0.0; 192000];
         let mut wave_right = vec![0.0; 192000];
         let mut vecpointer_left = 0;
         let mut vecpointer_right = 0;
+        let mut start_address = 0;
+        let mut end_address = 0;
         while run {
             let opt_atom_event: Option<AtomEvent> =
                 if let Ok(rx_atome_event) = rx_atom_event.try_recv() {
@@ -33,12 +36,18 @@ pub fn start_wave_manager(
                 };
             if let Some(atom_event) = opt_atom_event {
                 match atom_event.event_type {
-                    Type::Recording => {
-                        state_recording = atom_event.start;
+                    Type::Recording(state) => {
+                        state_recording = state;
                     }
-                    Type::Playback => {}
-                    Type::ChangeStartAdress(adress) => {}
-                    Type::ChangeEndAdress(adress) => {}
+                    Type::Playback(state) => {
+                        state_playback = state;
+                    }
+                    Type::ChangeStartAdress(adress) => {
+                        start_address = adress;
+                    }
+                    Type::ChangeEndAdress(adress) => {
+                        end_address = adress;
+                    }
                 }
             }
 

@@ -1,9 +1,9 @@
 #[derive(PartialEq, Clone)]
 pub enum Type {
-    Recording,
+    Recording(bool),
     ChangeStartAdress(usize),
     ChangeEndAdress(usize),
-    Playback,
+    Playback(bool),
 }
 
 #[derive(Clone)]
