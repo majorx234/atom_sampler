@@ -53,4 +53,5 @@ fn main() {
         options,
         Box::new(|_cc| Box::new(atom_sampler_app)),
     );
+    let _ = jack_thread.join();
 }
