@@ -51,7 +51,7 @@ pub fn start_wave_manager(
                 }
             }
 
-            if (state_recording) {
+            if state_recording {
                 let length_left = ringbuffer_left_in.len();
                 wave_left.splice(vecpointer_left..length_left, ringbuffer_left_in.pop_iter());
                 let length_right = ringbuffer_right_in.len();
