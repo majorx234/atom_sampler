@@ -1,9 +1,11 @@
 use crate::error::{Error, Result};
+use hound;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use wav::{bit_depth::BitDepth, read};
+
 struct Sample {
-    data: Vec<f32>,
+    data_left: Vec<f32>,
+    data_right: Vec<f32>,
     path: Option<Box<Path>>,
     gain: f32,
     speed: f32,
@@ -13,7 +15,8 @@ struct Sample {
 impl Sample {
     fn new() -> Self {
         Sample {
-            data: Vec::new(),
+            data_left: Vec::new(),
+            data_right: Vec::new(),
             path: None,
             gain: 1.0f32,
             speed: 1.0f32,
@@ -21,16 +24,24 @@ impl Sample {
         }
     }
     fn load_from_wav() -> Result<Self> {
-        let mut inp_file = File::open(Path::new("data/sine.wav"))?;
-        let (header, data) = wav::read(&mut inp_file)?;
-        match data {
-            BitDepth::ThirtyTwoFloat(data) => Ok(Sample {
-                data: Vec::new(),
-                path: None,
-                gain: 1.0f32,
-                speed: 1.0f32,
-                pan: 0.5f32,
-            }),
+        let mut reader = hound::WavReader::open("testsamples/pop.wav")?;
+        let format = reader.spec().sample_format;
+        let mut nsamples = reader.len() as usize;
+        match format {
+            hound::SampleFormat::Float => {
+                let data: Vec<f32> = reader
+                    .samples::<f32>()
+                    .map(|x| x.unwrap())
+                    .collect::<Vec<f32>>();
+                Ok(Sample {
+                    data_left: Vec::new(),
+                    data_right: Vec::new(),
+                    path: None,
+                    gain: 1.0f32,
+                    speed: 1.0f32,
+                    pan: 0.5f32,
+                })
+            }
             _ => Err(Error::IoWrongDatatyp),
         }
     }
