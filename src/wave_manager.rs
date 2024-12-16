@@ -106,10 +106,10 @@ fn start_recording(
         let mut vecpointer_left = 0;
         let mut vecpointer_right = 0;
         while run {
-            let length_left = ringbuffer_left_in.len();
+            let length_left = 1024.min(ringbuffer_left_in.len());
             wave_left.splice(vecpointer_left..length_left, ringbuffer_left_in.pop_iter());
             vecpointer_left += length_left;
-            let length_right = ringbuffer_right_in.len();
+            let length_right = 1024.min(ringbuffer_right_in.len());
             wave_right.splice(
                 vecpointer_right..length_right,
                 ringbuffer_right_in.pop_iter(),
