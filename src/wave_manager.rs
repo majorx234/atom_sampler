@@ -52,11 +52,11 @@ pub fn start_wave_manager(
                                     rx1_stop_rec,
                                 ));
                                 state_recording = state;
-                            } else {
-                                // stop recording
-                                if let Some(mut tx_stop_rec) = tx_stop_rec_opt.take() {
-                                    let _ = tx_stop_rec.try_broadcast(false);
-                                }
+                            }
+                        } else {
+                            // stop recording
+                            if let Some(mut tx_stop_rec) = tx_stop_rec_opt.take() {
+                                let _ = tx_stop_rec.try_broadcast(false);
                             }
                         }
                     }
