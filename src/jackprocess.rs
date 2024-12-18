@@ -27,6 +27,9 @@ pub fn start_jack_thread(
         // register ports:
         let mut out_a = client.register_port("as_out_l", jack::AudioOut).unwrap();
         let mut out_b = client.register_port("as_out_r", jack::AudioOut).unwrap();
+        // register midi ports:
+        let midi_in = client.register_port("midi_in", jack::MidiIn).unwrap();
+
         let in_a = client
             .register_port("as_in_l", jack::AudioIn::default())
             .unwrap();
@@ -65,6 +68,8 @@ pub fn start_jack_thread(
             let out_b_p = out_b.as_mut_slice(ps);
             let in_a_p = in_a.as_slice(ps);
             let in_b_p = in_b.as_slice(ps);
+
+            let in_midi_iter = midi_in.iter(ps);
 
             let opt_atom_event: Option<AtomEvent> =
                 if let Ok(rx_atome_event) = rx_atom_event.try_recv() {
