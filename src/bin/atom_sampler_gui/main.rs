@@ -2,6 +2,7 @@ use atom_sampler_lib::{atom_event, jackprocess::start_jack_thread, ui::elements:
 use eframe::{self, egui::ViewportBuilder};
 mod atom_sampler_app;
 use atom_sampler_app::AtomSamplerApp;
+use atom_sampler_lib::jackmidi::MidiMsgGeneric;
 use bus::Bus;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use ringbuf::HeapRb;
@@ -20,15 +21,21 @@ fn main() {
     let (ringbuffer_left_play_in, ringbuffer_left_play_out) = ringbuffer_left_play.split();
     let (ringbuffer_right_play_in, ringbuffer_right_play_out) = ringbuffer_right_play.split();
 
-    let mut tx_close = bus::Bus::<bool>::new(1);
+    let mut tx_close = Bus::<bool>::new(1);
     let rx1_close = tx_close.add_rx();
     let (tx_atom_event, rx_atom_event) = unbounded();
+
+    let mut tx_midi = Bus::<MidiMsgGeneric>::new(20);
+    let rx1_midi = tx_midi.add_rx();
+    let rx2_midi = tx_midi.add_rx();
+
     let jack_thread = start_jack_thread(
         rx1_close,
         ringbuffer_left_in,
         ringbuffer_right_in,
         ringbuffer_left_play_out,
         ringbuffer_right_play_out,
+        tx_midi,
         rx_atom_event,
     );
 

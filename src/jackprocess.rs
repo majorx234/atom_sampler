@@ -1,6 +1,7 @@
 use crate::atom_event::AtomEvent;
 use crate::atom_event::Type;
-use bus::BusReader;
+use crate::jackmidi::MidiMsgGeneric;
+use bus::{Bus, BusReader};
 use crossbeam_channel::Receiver;
 use jack;
 use ringbuf::Consumer;
@@ -16,6 +17,7 @@ pub fn start_jack_thread(
     mut ringbuffer_right_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
     mut ringbuffer_left_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
     mut ringbuffer_right_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut midi_sender: Bus<MidiMsgGeneric>,
     rx_atom_event: Receiver<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
@@ -77,6 +79,13 @@ pub fn start_jack_thread(
                 } else {
                     None
                 };
+
+            // read midi messages
+            let midi_in_iter = midi_in.iter(ps);
+            for raw_midi_event in midi_in_iter {
+                let midi_msg: MidiMsgGeneric = raw_midi_event.into();
+                let _ = midi_sender.try_send(midi_msg);
+            }
 
             // setup states with event
             if let Some(atom_event) = opt_atom_event {
