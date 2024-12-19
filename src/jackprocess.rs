@@ -110,12 +110,8 @@ pub fn start_jack_thread(
                 ringbuffer_right_in.push_iter(&mut in_b_p.iter().copied());
             }
             if state_playback {
-                for (n, item) in ringbuffer_left_out.pop_iter().enumerate() {
-                    out_a_p[n] = item;
-                }
-                for (n, item) in ringbuffer_right_out.pop_iter().enumerate() {
-                    out_b_p[n] = item;
-                }
+                ringbuffer_left_out.pop_slice(out_a_p);
+                ringbuffer_right_out.pop_slice(out_b_p);
             }
 
             jack::Control::Continue
