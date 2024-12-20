@@ -84,7 +84,7 @@ pub fn start_jack_thread(
             let midi_in_iter = midi_in.iter(ps);
             for raw_midi_event in midi_in_iter {
                 let midi_msg: MidiMsgGeneric = raw_midi_event.into();
-                let _ = midi_sender.try_send(midi_msg);
+                let _ = midi_sender.try_broadcast(midi_msg);
             }
 
             // setup states with event
