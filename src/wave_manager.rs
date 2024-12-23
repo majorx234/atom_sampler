@@ -23,10 +23,16 @@ pub fn start_wave_manager(
         let mut start_address = 0;
         let mut end_address = 0;
         let mut tx_stop_rec_opt: Option<bus::Bus<bool>> = None;
+        let mut tx_stop_play_opt: Option<bus::Bus<bool>> = None;
 
         let mut ringbuffer_left_in_opt = Some(ringbuffer_left_in);
         let mut ringbuffer_right_in_opt = Some(ringbuffer_right_in);
+
+        let mut ringbuffer_left_out_opt = Some(ringbuffer_left_out);
+        let mut ringbuffer_right_out_opt = Some(ringbuffer_right_out);
+
         let mut recording_join_handle_opt: Option<_> = None;
+        let mut playing_join_handle_opt: Option<_> = None;
         while run {
             let opt_atom_event: Option<AtomEvent> =
                 if let Ok(rx_atome_event) = rx_atom_event.try_recv() {
@@ -62,6 +68,26 @@ pub fn start_wave_manager(
                     }
                     Type::Playback(state) => {
                         state_playback = state;
+                        if state_playback {
+                            if let (Some(ringbuffer_left_out), Some(ringbuffer_right_out)) = (
+                                ringbuffer_left_out_opt.take(),
+                                ringbuffer_right_out_opt.take(),
+                            ) {
+                                tx_stop_play_opt = Some(Bus::<bool>::new(1));
+                                let rx1_stop_play = tx_stop_play_opt.as_mut().unwrap().add_rx();
+
+                                playing_join_handle_opt = Some(start_playback(
+                                    ringbuffer_left_out,
+                                    ringbuffer_right_out,
+                                    rx1_stop_play,
+                                ));
+                            }
+                        } else {
+                            // stop playback
+                            if let Some(mut tx_stop_play) = tx_stop_play_opt.take() {
+                                let _ = tx_stop_play.try_broadcast(false);
+                            }
+                        }
                     }
                     Type::ChangeStartAdress(adress) => {
                         start_address = adress;
@@ -132,5 +158,15 @@ fn start_recording(
             }
         }
         (wave_left, wave_right)
+    })
+}
+
+fn start_playback(
+    mut ringbuffer_left_out: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_right_out: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut rx_stop_play: BusReader<bool>,
+) -> std::thread::JoinHandle<()> {
+    std::thread::spawn(move || {
+        // TODO: playback from buffer
     })
 }
