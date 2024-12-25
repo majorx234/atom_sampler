@@ -32,7 +32,7 @@ pub fn start_wave_manager(
         let mut ringbuffer_right_out_opt = Some(ringbuffer_right_out);
 
         let mut recording_join_handle_opt: Option<_> = None;
-        let mut playing_join_handle_opt: Option<_> = None;
+        let mut playback_join_handle_opt: Option<_> = None;
         while run {
             let opt_atom_event: Option<AtomEvent> =
                 if let Ok(rx_atome_event) = rx_atom_event.try_recv() {
@@ -76,7 +76,7 @@ pub fn start_wave_manager(
                                 tx_stop_play_opt = Some(Bus::<bool>::new(1));
                                 let rx1_stop_play = tx_stop_play_opt.as_mut().unwrap().add_rx();
 
-                                playing_join_handle_opt = Some(start_playback(
+                                playback_join_handle_opt = Some(start_playback(
                                     ringbuffer_left_out,
                                     ringbuffer_right_out,
                                     rx1_stop_play,
@@ -106,6 +106,16 @@ pub fn start_wave_manager(
                         }
                     } else {
                         recording_join_handle_opt = Some(recording_join_handle);
+                    }
+                }
+            }
+            if state_playback {
+                // TODO: restart playback with message
+                if let Some(playback_join_handle) = playback_join_handle_opt.take() {
+                    if playback_join_handle.is_finished() {
+                        state_playback = false;
+                    } else {
+                        playback_join_handle_opt = Some(playback_join_handle);
                     }
                 }
             }
