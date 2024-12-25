@@ -3,7 +3,7 @@ use hound;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
-struct Sample {
+pub struct Sample {
     data_left: Vec<f32>,
     data_right: Vec<f32>,
     gain: f32,
@@ -12,7 +12,7 @@ struct Sample {
 }
 
 impl Sample {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Sample {
             data_left: Vec::new(),
             data_right: Vec::new(),
@@ -22,13 +22,13 @@ impl Sample {
         }
     }
 
-    fn load_from_data(&mut self, data_left: Vec<f32>, data_right: Vec<f32>) -> Result<()> {
+    pub fn load_from_data(&mut self, data_left: Vec<f32>, data_right: Vec<f32>) -> Result<()> {
         self.data_left = data_left;
         self.data_right = data_right;
         Ok(())
     }
 
-    fn load_from_wav(&mut self, path: PathBuf) -> Result<()> {
+    pub fn load_from_wav(&mut self, path: PathBuf) -> Result<()> {
         let mut reader = hound::WavReader::open(path)?;
         let format = reader.spec().sample_format;
         let mut nsamples = reader.len() as usize;

@@ -104,6 +104,7 @@ pub fn start_wave_manager(
                         if let Ok((_left_data, _right_data)) = recording_join_handle.join() {
                             // create sample
                         }
+                        state_recording = false;
                     } else {
                         recording_join_handle_opt = Some(recording_join_handle);
                     }
