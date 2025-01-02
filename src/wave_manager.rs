@@ -179,5 +179,18 @@ fn start_playback(
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         // TODO: playback from buffer
+        let mut vecpointer_left = 0;
+        let mut vecpointer_right = 0;
+        let mut run = true;
+        while run {
+            if let Ok(is_stop) = rx_stop_play.try_recv() {
+                if is_stop {
+                    run = false;
+                }
+            }
+            // TODO: adjust time according to samples written
+            let mut sleep_time_ms = 100;
+            thread::sleep(Duration::from_millis(sleep_time_ms));
+        }
     })
 }
