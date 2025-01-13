@@ -4,19 +4,18 @@ use crate::jackmidi::MidiMsgGeneric;
 use bus::{Bus, BusReader};
 use crossbeam_channel::Receiver;
 use jack;
-use ringbuf::Consumer;
-use ringbuf::Producer;
-use ringbuf::SharedRb;
-use std::mem::MaybeUninit;
-use std::sync::Arc;
+use ringbuf::{
+    traits::{Consumer, Producer},
+    HeapCons, HeapProd,
+};
 use std::{process::exit, thread, time::Duration};
 
 pub fn start_jack_thread(
     mut rx_close: BusReader<bool>,
-    mut ringbuffer_left_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_right_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_left_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_right_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_left_in: HeapProd<f32>,
+    mut ringbuffer_right_in: HeapProd<f32>,
+    mut ringbuffer_left_out: HeapCons<f32>,
+    mut ringbuffer_right_out: HeapCons<f32>,
     mut midi_sender: Bus<MidiMsgGeneric>,
     rx_atom_event: Receiver<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {

@@ -7,17 +7,17 @@ use atom_sampler_lib::{
 use bus::Bus;
 use crossbeam_channel::Sender;
 use eframe::egui::{self, ViewportCommand, Widget};
-use ringbuf::{Consumer, SharedRb};
-
+use ringbuf::{
+    traits::{Consumer, Observer},
+    HeapCons, HeapProd,
+};
 pub struct AtomSamplerApp {
     pub wave_loaded: bool,
     pub console: DebugConsole,
     pub tx_close: Option<Bus<bool>>,
     pub tx_atom_event: Option<Sender<AtomEvent>>,
-    pub ringbuffer_left_out:
-        Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
-    pub ringbuffer_right_out:
-        Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
+    pub ringbuffer_left_out: Option<HeapCons<f32>>,
+    pub ringbuffer_right_out: Option<HeapCons<f32>>,
 }
 
 impl AtomSamplerApp {
@@ -26,12 +26,8 @@ impl AtomSamplerApp {
         console: DebugConsole,
         tx_close: Bus<bool>,
         tx_atom_event: Sender<AtomEvent>,
-        ringbuffer_left_out: Option<
-            Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-        >,
-        ringbuffer_right_out: Option<
-            Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-        >,
+        ringbuffer_left_out: Option<HeapCons<f32>>,
+        ringbuffer_right_out: Option<HeapCons<f32>>,
     ) -> Self {
         Self {
             wave_loaded,
@@ -64,7 +60,7 @@ impl eframe::App for AtomSamplerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         match &mut self.ringbuffer_left_out {
             Some(ringbuffer_left_out) => {
-                while ringbuffer_left_out.len() > 512 {
+                while ringbuffer_left_out.occupied_len() > 512 {
                     let mut values: Vec<f32> = vec![0.0; 512];
                 }
             }
@@ -72,7 +68,7 @@ impl eframe::App for AtomSamplerApp {
         };
         match &mut self.ringbuffer_right_out {
             Some(ringbuffer_right_out) => {
-                while ringbuffer_right_out.len() > 512 {
+                while ringbuffer_right_out.occupied_len() > 512 {
                     let mut values: Vec<f32> = vec![0.0; 512];
                 }
             }

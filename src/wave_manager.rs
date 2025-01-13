@@ -1,19 +1,18 @@
 use crate::atom_event::AtomEvent;
 use crate::atom_event::Type;
 use bus::{Bus, BusReader};
-use ringbuf::Consumer;
-use ringbuf::Producer;
-use ringbuf::SharedRb;
-use std::mem::MaybeUninit;
-use std::sync::Arc;
+use ringbuf::{
+    traits::{Consumer, Observer},
+    HeapCons, HeapProd,
+};
 use std::{process::exit, thread, time::Duration};
 
 pub fn start_wave_manager(
     mut rx_close: BusReader<bool>,
-    mut ringbuffer_left_in: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_right_in: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_left_out: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_right_out: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_left_in: HeapCons<f32>,
+    mut ringbuffer_right_in: HeapCons<f32>,
+    mut ringbuffer_left_out: HeapProd<f32>,
+    mut ringbuffer_right_out: HeapProd<f32>,
     mut rx_atom_event: BusReader<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
@@ -132,8 +131,8 @@ pub fn start_wave_manager(
 }
 
 fn start_recording(
-    mut ringbuffer_left_in: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_right_in: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_left_in: HeapCons<f32>,
+    mut ringbuffer_right_in: HeapCons<f32>,
     mut rx_stop_rec: BusReader<bool>,
 ) -> std::thread::JoinHandle<(Vec<f32>, Vec<f32>)> {
     std::thread::spawn(move || {
@@ -144,8 +143,8 @@ fn start_recording(
         let mut vecpointer_left = 0;
         let mut vecpointer_right = 0;
         while run {
-            let length_left = 1024.min(ringbuffer_left_in.len());
-            let length_right = 1024.min(ringbuffer_right_in.len());
+            let length_left = 1024.min(ringbuffer_left_in.occupied_len());
+            let length_right = 1024.min(ringbuffer_right_in.occupied_len());
 
             if (vecpointer_left + length_left < wave_size)
                 && (vecpointer_right + length_right < wave_size)
@@ -173,8 +172,8 @@ fn start_recording(
 }
 
 fn start_playback(
-    mut ringbuffer_left_out: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-    mut ringbuffer_right_out: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_left_out: HeapProd<f32>,
+    mut ringbuffer_right_out: HeapProd<f32>,
     mut rx_stop_play: BusReader<bool>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {

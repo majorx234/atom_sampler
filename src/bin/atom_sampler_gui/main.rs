@@ -5,7 +5,7 @@ use atom_sampler_app::AtomSamplerApp;
 use atom_sampler_lib::jackmidi::MidiMsgGeneric;
 use bus::Bus;
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use ringbuf::HeapRb;
+use ringbuf::{traits::Split, HeapRb};
 
 fn main() {
     println!("atom sampler WIP!");
