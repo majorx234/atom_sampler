@@ -1,5 +1,6 @@
 use crate::atom_event::AtomEvent;
 use crate::atom_event::Type;
+use crate::dsp::sample::Sample;
 use bus::{Bus, BusReader};
 use ringbuf::{
     traits::{Consumer, Observer},
@@ -21,6 +22,7 @@ pub fn start_wave_manager(
         let mut state_playback = false;
         let mut start_address = 0;
         let mut end_address = 0;
+        let mut sample1: Option<Sample> = None; //TODO: use Wave handler
         let mut tx_stop_rec_opt: Option<bus::Bus<bool>> = None;
         let mut tx_stop_play_opt: Option<bus::Bus<bool>> = None;
 
@@ -68,23 +70,26 @@ pub fn start_wave_manager(
                     Type::Playback(state) => {
                         state_playback = state;
                         if state_playback {
-                            if let (Some(ringbuffer_left_out), Some(ringbuffer_right_out)) = (
-                                ringbuffer_left_out_opt.take(),
-                                ringbuffer_right_out_opt.take(),
-                            ) {
-                                tx_stop_play_opt = Some(Bus::<bool>::new(1));
-                                let rx1_stop_play = tx_stop_play_opt.as_mut().unwrap().add_rx();
+                            if let Some(sampple) = sample1.take() {
+                                if let (Some(ringbuffer_left_out), Some(ringbuffer_right_out)) = (
+                                    ringbuffer_left_out_opt.take(),
+                                    ringbuffer_right_out_opt.take(),
+                                ) {
+                                    tx_stop_play_opt = Some(Bus::<bool>::new(1));
+                                    let rx1_stop_play = tx_stop_play_opt.as_mut().unwrap().add_rx();
 
-                                playback_join_handle_opt = Some(start_playback(
-                                    ringbuffer_left_out,
-                                    ringbuffer_right_out,
-                                    rx1_stop_play,
-                                ));
-                            }
-                        } else {
-                            // stop playback
-                            if let Some(mut tx_stop_play) = tx_stop_play_opt.take() {
-                                let _ = tx_stop_play.try_broadcast(false);
+                                    playback_join_handle_opt = Some(start_playback(
+                                        ringbuffer_left_out,
+                                        ringbuffer_right_out,
+                                        rx1_stop_play,
+                                        sampple,
+                                    ));
+                                }
+                            } else {
+                                // stop playback
+                                if let Some(mut tx_stop_play) = tx_stop_play_opt.take() {
+                                    let _ = tx_stop_play.try_broadcast(false);
+                                }
                             }
                         }
                     }
@@ -100,8 +105,11 @@ pub fn start_wave_manager(
             if state_recording {
                 if let Some(recording_join_handle) = recording_join_handle_opt.take() {
                     if recording_join_handle.is_finished() {
-                        if let Ok((_left_data, _right_data)) = recording_join_handle.join() {
+                        if let Ok((left_data, right_data)) = recording_join_handle.join() {
                             // create sample
+                            let mut recording = Sample::new();
+                            let _ = recording.load_from_data(left_data, right_data);
+                            sample1 = Some(recording);
                         }
                         state_recording = false;
                     } else {
@@ -175,6 +183,7 @@ fn start_playback(
     mut ringbuffer_left_out: HeapProd<f32>,
     mut ringbuffer_right_out: HeapProd<f32>,
     mut rx_stop_play: BusReader<bool>,
+    mut sample: Sample,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         // TODO: playback from buffer
@@ -187,6 +196,7 @@ fn start_playback(
                     run = false;
                 }
             }
+
             // TODO: adjust time according to samples written
             let mut sleep_time_ms = 100;
             thread::sleep(Duration::from_millis(sleep_time_ms));
