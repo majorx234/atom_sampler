@@ -4,6 +4,7 @@ pub mod error;
 pub mod jackmidi;
 pub mod jackprocess;
 pub mod ui;
+pub mod wave;
 pub mod wave_commands;
 pub mod wave_handler;
 pub mod wave_manager;
