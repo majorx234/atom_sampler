@@ -3,26 +3,32 @@ use crossbeam_channel::Receiver;
 use std::path::PathBuf;
 use std::{process::exit, thread, time::Duration};
 
-struct WaveHandler {
-    sample: Option<Sample>,
-    is_loaded: bool,
-    state_recording: bool,
-    state_playback: bool,
-    path: Option<PathBuf>,
-    rx_command: Receiver<WaveCommands>,
-    processing: Option<thread::JoinHandle<()>>,
+pub struct WaveHandler {
+    pub sample: Option<Sample>,
+    pub start_address: usize,
+    pub end_address: usize,
+    pub is_loaded: bool,
+    pub state_recording: bool,
+    pub state_playback: bool,
+    pub path: Option<PathBuf>,
+    pub rx_command: Option<Receiver<WaveCommands>>,
+    pub rec_processing: Option<thread::JoinHandle<(Vec<f32>, Vec<f32>)>>,
+    pub play_processing: Option<thread::JoinHandle<()>>,
 }
 
 impl WaveHandler {
-    pub fn new(rx_command: Receiver<WaveCommands>) -> Self {
+    pub fn new(rx_command: Option<Receiver<WaveCommands>>) -> Self {
         WaveHandler {
             sample: None,
+            start_address: 0,
+            end_address: 0,
             is_loaded: false,
             state_recording: false,
             state_playback: false,
             path: None,
             rx_command,
-            processing: None,
+            rec_processing: None,
+            play_processing: None,
         }
     }
 }
