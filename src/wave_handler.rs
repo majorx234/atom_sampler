@@ -21,7 +21,7 @@ pub struct WaveHandler {
     pub rx_command: Option<Receiver<WaveCommands>>,
     pub rec_processing: Option<thread::JoinHandle<(Vec<f32>, Vec<f32>)>>,
     pub play_processing: Option<thread::JoinHandle<()>>,
-    pub rx_stop_bus: Option<Bus<bool>>,
+    pub tx_stop_bus: Option<Bus<bool>>,
 }
 
 impl WaveHandler {
@@ -37,7 +37,7 @@ impl WaveHandler {
             rx_command,
             rec_processing: None,
             play_processing: None,
-            rx_stop_bus: None,
+            tx_stop_bus: None,
         }
     }
     // WIP replacement for logic in wave_manager
@@ -46,13 +46,12 @@ impl WaveHandler {
         mut ringbuffer_left_in_opt: Option<HeapCons<f32>>,
         mut ringbuffer_right_in_opt: Option<HeapCons<f32>>,
     ) {
-        let mut tx_stop_rec_opt: Option<bus::Bus<bool>> = None;
         if let (Some(ringbuffer_left_in), Some(ringbuffer_right_in)) = (
             ringbuffer_left_in_opt.take(),
             ringbuffer_right_in_opt.take(),
         ) {
-            tx_stop_rec_opt = Some(Bus::<bool>::new(1));
-            let rx1_stop_rec = tx_stop_rec_opt.as_mut().unwrap().add_rx();
+            self.tx_stop_bus = Some(Bus::<bool>::new(1));
+            let rx1_stop_rec = self.tx_stop_bus.as_mut().unwrap().add_rx();
 
             self.rec_processing = Some(start_recording(
                 ringbuffer_left_in,
@@ -60,6 +59,12 @@ impl WaveHandler {
                 rx1_stop_rec,
             ));
             self.state_recording = true;
+        }
+    }
+
+    pub fn stop_recording(&mut self) {
+        if let Some(mut tx_stop_rec) = self.tx_stop_bus.take() {
+            let _ = tx_stop_rec.try_broadcast(false);
         }
     }
 }
