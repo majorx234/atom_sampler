@@ -65,8 +65,7 @@ pub fn start_wave_manager(
                         }
                     }
                     Type::Playback(state) => {
-                        wave_handler.state_playback = state;
-                        if wave_handler.state_playback {
+                        if state {
                             if let Some(sampple) = wave_handler.sample.take() {
                                 if let (Some(ringbuffer_left_out), Some(ringbuffer_right_out)) = (
                                     ringbuffer_left_out_opt.take(),
@@ -82,11 +81,12 @@ pub fn start_wave_manager(
                                         sampple,
                                     ));
                                 }
-                            } else {
-                                // stop playback
-                                if let Some(mut tx_stop_play) = tx_stop_play_opt.take() {
-                                    let _ = tx_stop_play.try_broadcast(false);
-                                }
+                            }
+                            wave_handler.state_playback = state;
+                        } else {
+                            // stop playback
+                            if let Some(mut tx_stop_play) = tx_stop_play_opt.take() {
+                                let _ = tx_stop_play.try_broadcast(false);
                             }
                         }
                     }
