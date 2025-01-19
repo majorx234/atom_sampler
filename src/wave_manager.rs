@@ -55,7 +55,7 @@ pub fn start_wave_manager(
                                     ringbuffer_right_in,
                                     rx1_stop_rec,
                                 ));
-                                wave_handler.state_recording = state;
+                                wave_handler.state_recording = true;
                             }
                         } else {
                             // stop recording

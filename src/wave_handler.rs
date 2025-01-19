@@ -1,5 +1,12 @@
+use crate::wave::play::start_playback;
+use crate::wave::record::start_recording;
 use crate::{dsp::sample::Sample, wave_commands::WaveCommands};
+use bus::{Bus, BusReader};
 use crossbeam_channel::Receiver;
+use ringbuf::{
+    traits::{Consumer, Observer},
+    HeapCons, HeapProd,
+};
 use std::path::PathBuf;
 use std::{process::exit, thread, time::Duration};
 
@@ -14,6 +21,7 @@ pub struct WaveHandler {
     pub rx_command: Option<Receiver<WaveCommands>>,
     pub rec_processing: Option<thread::JoinHandle<(Vec<f32>, Vec<f32>)>>,
     pub play_processing: Option<thread::JoinHandle<()>>,
+    pub rx_stop_bus: Option<Bus<bool>>,
 }
 
 impl WaveHandler {
@@ -29,6 +37,29 @@ impl WaveHandler {
             rx_command,
             rec_processing: None,
             play_processing: None,
+            rx_stop_bus: None,
+        }
+    }
+    // WIP replacement for logic in wave_manager
+    pub fn start_recording(
+        &mut self,
+        mut ringbuffer_left_in_opt: Option<HeapCons<f32>>,
+        mut ringbuffer_right_in_opt: Option<HeapCons<f32>>,
+    ) {
+        let mut tx_stop_rec_opt: Option<bus::Bus<bool>> = None;
+        if let (Some(ringbuffer_left_in), Some(ringbuffer_right_in)) = (
+            ringbuffer_left_in_opt.take(),
+            ringbuffer_right_in_opt.take(),
+        ) {
+            tx_stop_rec_opt = Some(Bus::<bool>::new(1));
+            let rx1_stop_rec = tx_stop_rec_opt.as_mut().unwrap().add_rx();
+
+            self.rec_processing = Some(start_recording(
+                ringbuffer_left_in,
+                ringbuffer_right_in,
+                rx1_stop_rec,
+            ));
+            self.state_recording = true;
         }
     }
 }
