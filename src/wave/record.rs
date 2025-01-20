@@ -1,10 +1,8 @@
-use crate::dsp::sample::Sample;
-use bus::{Bus, BusReader};
+use bus::BusReader;
 use ringbuf::{
     traits::{Consumer, Observer},
-    HeapCons, HeapProd,
+    HeapCons,
 };
-use std::{process::exit, thread, time::Duration};
 
 pub fn start_recording(
     mut ringbuffer_left_in: HeapCons<f32>,
