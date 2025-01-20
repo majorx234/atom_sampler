@@ -1,33 +1,23 @@
 use crate::atom_event::AtomEvent;
 use crate::atom_event::Type;
-use crate::dsp::sample::Sample;
-use crate::wave::play::start_playback;
-use crate::wave::record::start_recording;
 use crate::wave_handler::WaveHandler;
-use bus::{Bus, BusReader};
-use ringbuf::{
-    traits::{Consumer, Observer},
-    HeapCons, HeapProd,
-};
-use std::{process::exit, thread, time::Duration};
+use bus::BusReader;
+use ringbuf::{HeapCons, HeapProd};
+use std::{thread, time::Duration};
 
 pub fn start_wave_manager(
     mut rx_close: BusReader<bool>,
-    mut ringbuffer_left_in: HeapCons<f32>,
-    mut ringbuffer_right_in: HeapCons<f32>,
-    mut ringbuffer_left_out: HeapProd<f32>,
-    mut ringbuffer_right_out: HeapProd<f32>,
+    ringbuffer_left_in: HeapCons<f32>,
+    ringbuffer_right_in: HeapCons<f32>,
+    ringbuffer_left_out: HeapProd<f32>,
+    ringbuffer_right_out: HeapProd<f32>,
     mut rx_atom_event: BusReader<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         let mut run: bool = true;
         let mut wave_handler = WaveHandler::new(None);
-        let mut tx_stop_rec_opt: Option<bus::Bus<bool>> = None;
-        let mut tx_stop_play_opt: Option<bus::Bus<bool>> = None;
-
         let mut ringbuffer_left_in_opt = Some(ringbuffer_left_in);
         let mut ringbuffer_right_in_opt = Some(ringbuffer_right_in);
-
         let mut ringbuffer_left_out_opt = Some(ringbuffer_left_out);
         let mut ringbuffer_right_out_opt = Some(ringbuffer_right_out);
 
@@ -42,87 +32,39 @@ pub fn start_wave_manager(
                 match atom_event.event_type {
                     Type::Recording(state) => {
                         if state {
-                            // start recording
-                            if let (Some(ringbuffer_left_in), Some(ringbuffer_right_in)) = (
-                                ringbuffer_left_in_opt.take(),
-                                ringbuffer_right_in_opt.take(),
-                            ) {
-                                tx_stop_rec_opt = Some(Bus::<bool>::new(1));
-                                let rx1_stop_rec = tx_stop_rec_opt.as_mut().unwrap().add_rx();
-
-                                wave_handler.rec_processing = Some(start_recording(
-                                    ringbuffer_left_in,
-                                    ringbuffer_right_in,
-                                    rx1_stop_rec,
-                                ));
-                                wave_handler.state_recording = true;
-                            }
+                            wave_handler.start_recording(
+                                &mut ringbuffer_left_in_opt.take(),
+                                &mut ringbuffer_right_in_opt.take(),
+                            );
                         } else {
-                            // stop recording
-                            if let Some(mut tx_stop_rec) = tx_stop_rec_opt.take() {
-                                let _ = tx_stop_rec.try_broadcast(false);
-                            }
+                            wave_handler.stop_recording();
                         }
                     }
                     Type::Playback(state) => {
                         if state {
-                            if let Some(sampple) = wave_handler.sample.take() {
-                                if let (Some(ringbuffer_left_out), Some(ringbuffer_right_out)) = (
-                                    ringbuffer_left_out_opt.take(),
-                                    ringbuffer_right_out_opt.take(),
-                                ) {
-                                    tx_stop_play_opt = Some(Bus::<bool>::new(1));
-                                    let rx1_stop_play = tx_stop_play_opt.as_mut().unwrap().add_rx();
-
-                                    wave_handler.play_processing = Some(start_playback(
-                                        ringbuffer_left_out,
-                                        ringbuffer_right_out,
-                                        rx1_stop_play,
-                                        sampple,
-                                    ));
-                                }
-                            }
+                            wave_handler.start_playback(
+                                &mut ringbuffer_left_out_opt.take(),
+                                &mut ringbuffer_right_out_opt.take(),
+                            );
                             wave_handler.state_playback = state;
                         } else {
-                            // stop playback
-                            if let Some(mut tx_stop_play) = tx_stop_play_opt.take() {
-                                let _ = tx_stop_play.try_broadcast(false);
-                            }
+                            wave_handler.stop_playback();
                         }
                     }
-                    Type::ChangeStartAdress(adress) => {
-                        wave_handler.start_address = adress;
+                    Type::ChangeStartAdress(address) => {
+                        wave_handler.change_start_address(address);
                     }
-                    Type::ChangeEndAdress(adress) => {
-                        wave_handler.end_address = adress;
+                    Type::ChangeEndAdress(address) => {
+                        wave_handler.change_end_address(address);
                     }
                 }
             }
 
             if wave_handler.state_recording {
-                if let Some(recording_join_handle) = wave_handler.rec_processing.take() {
-                    if recording_join_handle.is_finished() {
-                        if let Ok((left_data, right_data)) = recording_join_handle.join() {
-                            // create sample
-                            let mut recording = Sample::new();
-                            let _ = recording.load_from_data(left_data, right_data);
-                            wave_handler.sample = Some(recording);
-                        }
-                        wave_handler.state_recording = false;
-                    } else {
-                        wave_handler.rec_processing = Some(recording_join_handle);
-                    }
-                }
+                wave_handler.get_recording();
             }
             if wave_handler.state_playback {
-                // TODO: restart playback with message
-                if let Some(playback_join_handle) = wave_handler.play_processing.take() {
-                    if playback_join_handle.is_finished() {
-                        wave_handler.state_playback = false;
-                    } else {
-                        wave_handler.play_processing = Some(playback_join_handle);
-                    }
-                }
+                wave_handler.get_playback_finished();
             }
 
             // TODO: have better wait on msgs to receive instead of polling pattern

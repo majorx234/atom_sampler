@@ -45,8 +45,8 @@ impl WaveHandler {
     // WIP replacement for logic in wave_manager
     pub fn start_recording(
         &mut self,
-        mut ringbuffer_left_in_opt: Option<HeapCons<f32>>,
-        mut ringbuffer_right_in_opt: Option<HeapCons<f32>>,
+        ringbuffer_left_in_opt: &mut Option<HeapCons<f32>>,
+        ringbuffer_right_in_opt: &mut Option<HeapCons<f32>>,
     ) {
         if let (Some(ringbuffer_left_in), Some(ringbuffer_right_in)) = (
             ringbuffer_left_in_opt.take(),
@@ -88,8 +88,8 @@ impl WaveHandler {
 
     pub fn start_playback(
         &mut self,
-        mut ringbuffer_left_out_opt: Option<HeapProd<f32>>,
-        mut ringbuffer_right_out_opt: Option<HeapProd<f32>>,
+        ringbuffer_left_out_opt: &mut Option<HeapProd<f32>>,
+        ringbuffer_right_out_opt: &mut Option<HeapProd<f32>>,
     ) {
         if let Some(sample) = self.sample.take() {
             if let (Some(ringbuffer_left_out), Some(ringbuffer_right_out)) = (
@@ -111,6 +111,16 @@ impl WaveHandler {
     pub fn stop_playback(&mut self) {
         if let Some(mut tx_stop_play) = self.tx_stop_play_bus.take() {
             let _ = tx_stop_play.try_broadcast(false);
+        }
+    }
+    pub fn get_playback_finished(&mut self) {
+        // TODO: restart playback with message
+        if let Some(playback_join_handle) = self.play_processing.take() {
+            if playback_join_handle.is_finished() {
+                self.state_playback = false;
+            } else {
+                self.play_processing = Some(playback_join_handle);
+            }
         }
     }
     pub fn change_start_address(&mut self, address: usize) {
