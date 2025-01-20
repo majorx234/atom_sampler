@@ -21,7 +21,8 @@ pub struct WaveHandler {
     pub rx_command: Option<Receiver<WaveCommands>>,
     pub rec_processing: Option<thread::JoinHandle<(Vec<f32>, Vec<f32>)>>,
     pub play_processing: Option<thread::JoinHandle<()>>,
-    pub tx_stop_bus: Option<Bus<bool>>,
+    pub tx_stop_rec_bus: Option<Bus<bool>>,
+    pub tx_stop_play_bus: Option<Bus<bool>>,
 }
 
 impl WaveHandler {
@@ -37,7 +38,8 @@ impl WaveHandler {
             rx_command,
             rec_processing: None,
             play_processing: None,
-            tx_stop_bus: None,
+            tx_stop_rec_bus: None,
+            tx_stop_play_bus: None,
         }
     }
     // WIP replacement for logic in wave_manager
@@ -50,8 +52,8 @@ impl WaveHandler {
             ringbuffer_left_in_opt.take(),
             ringbuffer_right_in_opt.take(),
         ) {
-            self.tx_stop_bus = Some(Bus::<bool>::new(1));
-            let rx1_stop_rec = self.tx_stop_bus.as_mut().unwrap().add_rx();
+            self.tx_stop_rec_bus = Some(Bus::<bool>::new(1));
+            let rx1_stop_rec = self.tx_stop_rec_bus.as_mut().unwrap().add_rx();
 
             self.rec_processing = Some(start_recording(
                 ringbuffer_left_in,
@@ -63,7 +65,7 @@ impl WaveHandler {
     }
 
     pub fn stop_recording(&mut self) {
-        if let Some(mut tx_stop_rec) = self.tx_stop_bus.take() {
+        if let Some(mut tx_stop_rec) = self.tx_stop_rec_bus.take() {
             let _ = tx_stop_rec.try_broadcast(false);
         }
     }
@@ -82,5 +84,39 @@ impl WaveHandler {
                 self.rec_processing = Some(recording_join_handle);
             }
         }
+    }
+
+    pub fn start_playback(
+        &mut self,
+        mut ringbuffer_left_out_opt: Option<HeapProd<f32>>,
+        mut ringbuffer_right_out_opt: Option<HeapProd<f32>>,
+    ) {
+        if let Some(sample) = self.sample.take() {
+            if let (Some(ringbuffer_left_out), Some(ringbuffer_right_out)) = (
+                ringbuffer_left_out_opt.take(),
+                ringbuffer_right_out_opt.take(),
+            ) {
+                self.tx_stop_play_bus = Some(Bus::<bool>::new(1));
+                let rx1_stop_play = self.tx_stop_play_bus.as_mut().unwrap().add_rx();
+
+                self.play_processing = Some(start_playback(
+                    ringbuffer_left_out,
+                    ringbuffer_right_out,
+                    rx1_stop_play,
+                    sample,
+                ));
+            }
+        }
+    }
+    pub fn stop_playback(&mut self) {
+        if let Some(mut tx_stop_play) = self.tx_stop_play_bus.take() {
+            let _ = tx_stop_play.try_broadcast(false);
+        }
+    }
+    pub fn change_start_address(&mut self, address: usize) {
+        self.start_address = address;
+    }
+    pub fn change_end_address(&mut self, address: usize) {
+        self.end_address = address;
     }
 }
