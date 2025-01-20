@@ -67,4 +67,20 @@ impl WaveHandler {
             let _ = tx_stop_rec.try_broadcast(false);
         }
     }
+
+    pub fn get_recording(&mut self) {
+        if let Some(recording_join_handle) = self.rec_processing.take() {
+            if recording_join_handle.is_finished() {
+                if let Ok((left_data, right_data)) = recording_join_handle.join() {
+                    // create sample
+                    let mut recording = Sample::new();
+                    let _ = recording.load_from_data(left_data, right_data);
+                    self.sample = Some(recording);
+                }
+                self.state_recording = false;
+            } else {
+                self.rec_processing = Some(recording_join_handle);
+            }
+        }
+    }
 }
