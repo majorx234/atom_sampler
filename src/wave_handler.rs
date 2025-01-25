@@ -1,14 +1,11 @@
 use crate::wave::play::start_playback;
 use crate::wave::record::start_recording;
 use crate::{dsp::sample::Sample, wave_commands::WaveCommands};
-use bus::{Bus, BusReader};
+use bus::Bus;
 use crossbeam_channel::Receiver;
-use ringbuf::{
-    traits::{Consumer, Observer},
-    HeapCons, HeapProd,
-};
+use ringbuf::{HeapCons, HeapProd};
 use std::path::PathBuf;
-use std::{process::exit, thread, time::Duration};
+use std::thread;
 
 pub struct WaveHandler {
     pub sample: Option<Sample>,

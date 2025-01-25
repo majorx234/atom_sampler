@@ -1,10 +1,10 @@
-use atom_sampler_lib::{atom_event, jackprocess::start_jack_thread, ui::elements::DebugConsole};
+use atom_sampler_lib::{jackprocess::start_jack_thread, ui::elements::DebugConsole};
 use eframe::{self, egui::ViewportBuilder};
 mod atom_sampler_app;
 use atom_sampler_app::AtomSamplerApp;
 use atom_sampler_lib::jackmidi::MidiMsgGeneric;
 use bus::Bus;
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::unbounded;
 use ringbuf::{traits::Split, HeapRb};
 
 fn main() {
