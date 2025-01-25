@@ -1,11 +1,10 @@
 use crate::error::{Error, Result};
 use hound;
-use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub struct Sample {
-    data_left: Vec<f32>,
-    data_right: Vec<f32>,
+    pub data_left: Vec<f32>,
+    pub data_right: Vec<f32>,
     gain: f32,
     speed: f32,
     pan: f32,

@@ -1,5 +1,4 @@
 use hound;
-use std::fmt;
 use std::io::Error as ioError;
 pub type Result<T> = core::result::Result<T, Error>;
 
