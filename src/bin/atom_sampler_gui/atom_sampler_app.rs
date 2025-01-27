@@ -5,7 +5,6 @@ use atom_sampler_lib::{
     ui::elements::{pad_button, pad_button_ui, DebugConsole},
 };
 use bus::Bus;
-use crossbeam_channel::Sender;
 use eframe::egui::{self, ViewportCommand, Widget};
 use ringbuf::{
     traits::{Consumer, Observer},
@@ -15,7 +14,7 @@ pub struct AtomSamplerApp {
     pub wave_loaded: bool,
     pub console: DebugConsole,
     pub tx_close: Option<Bus<bool>>,
-    pub tx_atom_event: Option<Sender<AtomEvent>>,
+    pub tx_atom_event: Option<Bus<AtomEvent>>,
     pub ringbuffer_left_out: Option<HeapCons<f32>>,
     pub ringbuffer_right_out: Option<HeapCons<f32>>,
 }
@@ -25,7 +24,7 @@ impl AtomSamplerApp {
         wave_loaded: bool,
         console: DebugConsole,
         tx_close: Bus<bool>,
-        tx_atom_event: Sender<AtomEvent>,
+        tx_atom_event: Bus<AtomEvent>,
         ringbuffer_left_out: Option<HeapCons<f32>>,
         ringbuffer_right_out: Option<HeapCons<f32>>,
     ) -> Self {

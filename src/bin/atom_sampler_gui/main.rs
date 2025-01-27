@@ -1,10 +1,12 @@
-use atom_sampler_lib::{jackprocess::start_jack_thread, ui::elements::DebugConsole};
+use atom_sampler_lib::{
+    atom_event::AtomEvent, jackprocess::start_jack_thread, ui::elements::DebugConsole,
+    wave_manager::start_wave_manager,
+};
 use eframe::{self, egui::ViewportBuilder};
 mod atom_sampler_app;
 use atom_sampler_app::AtomSamplerApp;
 use atom_sampler_lib::jackmidi::MidiMsgGeneric;
 use bus::Bus;
-use crossbeam_channel::unbounded;
 use ringbuf::{traits::Split, HeapRb};
 
 fn main() {
@@ -23,7 +25,13 @@ fn main() {
 
     let mut tx_close = Bus::<bool>::new(1);
     let rx1_close = tx_close.add_rx();
-    let (tx_atom_event, rx_atom_event) = unbounded();
+    let rx2_close = tx_close.add_rx();
+
+    let mut tx_atom_event = Bus::<AtomEvent>::new(1);
+    let rx1_atom_event = tx_atom_event.add_rx();
+    let rx2_atom_event = tx_atom_event.add_rx();
+
+    //let (tx_atom_event, rx_atom_event) = unbounded();
 
     let mut tx_midi = Bus::<MidiMsgGeneric>::new(20);
     let rx1_midi = tx_midi.add_rx();
@@ -36,7 +44,16 @@ fn main() {
         ringbuffer_left_play_out,
         ringbuffer_right_play_out,
         tx_midi,
-        rx_atom_event,
+        rx1_atom_event,
+    );
+
+    start_wave_manager(
+        rx2_close,
+        ringbuffer_left_out,
+        ringbuffer_right_out,
+        ringbuffer_left_play_in,
+        ringbuffer_right_play_in,
+        rx2_atom_event,
     );
 
     let msgs: Vec<String> = Vec::new();
@@ -46,8 +63,8 @@ fn main() {
         DebugConsole { msgs, n_items },
         tx_close,
         tx_atom_event,
-        Some(ringbuffer_left_out),
-        Some(ringbuffer_right_out),
+        None,
+        None,
     );
 
     let options = eframe::NativeOptions {

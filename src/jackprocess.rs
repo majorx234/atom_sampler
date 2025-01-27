@@ -2,7 +2,6 @@ use crate::atom_event::AtomEvent;
 use crate::atom_event::Type;
 use crate::jackmidi::MidiMsgGeneric;
 use bus::{Bus, BusReader};
-use crossbeam_channel::Receiver;
 use jack;
 use ringbuf::{
     traits::{Consumer, Producer},
@@ -17,7 +16,7 @@ pub fn start_jack_thread(
     mut ringbuffer_left_out: HeapCons<f32>,
     mut ringbuffer_right_out: HeapCons<f32>,
     mut midi_sender: Bus<MidiMsgGeneric>,
-    rx_atom_event: Receiver<AtomEvent>,
+    mut rx_atom_event: BusReader<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         let mut run: bool = true;
