@@ -44,6 +44,8 @@ impl WaveHandler {
         &mut self,
         ringbuffer_left_in_opt: &mut Option<HeapCons<f32>>,
         ringbuffer_right_in_opt: &mut Option<HeapCons<f32>>,
+        ringbuffer_left_visual_in_opt: &mut Option<HeapProd<(f32, f32)>>,
+        ringbuffer_right_visual_in_opt: &mut Option<HeapProd<(f32, f32)>>,
     ) {
         if let (Some(ringbuffer_left_in), Some(ringbuffer_right_in)) = (
             ringbuffer_left_in_opt.take(),
@@ -55,6 +57,8 @@ impl WaveHandler {
             self.rec_processing = Some(start_recording(
                 ringbuffer_left_in,
                 ringbuffer_right_in,
+                ringbuffer_left_visual_in_opt,
+                ringbuffer_right_visual_in_opt,
                 rx1_stop_rec,
             ));
             self.state_recording = true;

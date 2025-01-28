@@ -17,11 +17,17 @@ fn main() {
     let ringbuffer_left_play = HeapRb::<f32>::new(192000);
     let ringbuffer_right_play = HeapRb::<f32>::new(192000);
 
+    let ringbuffer_left_visual = HeapRb::<(f32, f32)>::new(750);
+    let ringbuffer_right_visual = HeapRb::<(f32, f32)>::new(750);
+
     let (ringbuffer_left_in, ringbuffer_left_out) = ringbuffer_left.split();
     let (ringbuffer_right_in, ringbuffer_right_out) = ringbuffer_right.split();
 
     let (ringbuffer_left_play_in, ringbuffer_left_play_out) = ringbuffer_left_play.split();
     let (ringbuffer_right_play_in, ringbuffer_right_play_out) = ringbuffer_right_play.split();
+
+    let (ringbuffer_left_visual_in, ringbuffer_left_visual_out) = ringbuffer_left_visual.split();
+    let (ringbuffer_right_visual_in, ringbuffer_right_visual_out) = ringbuffer_right_visual.split();
 
     let mut tx_close = Bus::<bool>::new(1);
     let rx1_close = tx_close.add_rx();
@@ -53,6 +59,8 @@ fn main() {
         ringbuffer_right_out,
         ringbuffer_left_play_in,
         ringbuffer_right_play_in,
+        ringbuffer_left_visual_in,
+        ringbuffer_right_visual_in,
         rx2_atom_event,
     );
 
@@ -63,8 +71,8 @@ fn main() {
         DebugConsole { msgs, n_items },
         tx_close,
         tx_atom_event,
-        None,
-        None,
+        Some(ringbuffer_left_visual_out),
+        Some(ringbuffer_right_visual_out),
     );
 
     let options = eframe::NativeOptions {

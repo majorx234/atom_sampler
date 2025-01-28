@@ -15,8 +15,8 @@ pub struct AtomSamplerApp {
     pub console: DebugConsole,
     pub tx_close: Option<Bus<bool>>,
     pub tx_atom_event: Option<Bus<AtomEvent>>,
-    pub ringbuffer_left_out: Option<HeapCons<f32>>,
-    pub ringbuffer_right_out: Option<HeapCons<f32>>,
+    pub ringbuffer_left_out: Option<HeapCons<(f32, f32)>>,
+    pub ringbuffer_right_out: Option<HeapCons<(f32, f32)>>,
 }
 
 impl AtomSamplerApp {
@@ -25,8 +25,8 @@ impl AtomSamplerApp {
         console: DebugConsole,
         tx_close: Bus<bool>,
         tx_atom_event: Bus<AtomEvent>,
-        ringbuffer_left_out: Option<HeapCons<f32>>,
-        ringbuffer_right_out: Option<HeapCons<f32>>,
+        ringbuffer_left_out: Option<HeapCons<(f32, f32)>>,
+        ringbuffer_right_out: Option<HeapCons<(f32, f32)>>,
     ) -> Self {
         Self {
             wave_loaded,

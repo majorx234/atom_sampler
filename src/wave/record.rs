@@ -1,12 +1,15 @@
 use bus::BusReader;
 use ringbuf::{
-    traits::{Consumer, Observer},
-    HeapCons,
+    traits::{Consumer, Observer, Producer},
+    HeapCons, HeapProd,
 };
 
 pub fn start_recording(
     mut ringbuffer_left_in: HeapCons<f32>,
     mut ringbuffer_right_in: HeapCons<f32>,
+    ringbuffer_left_visual_in_opt: &mut Option<HeapProd<(f32, f32)>>,
+    ringbuffer_right_visual_in_opt: &mut Option<HeapProd<(f32, f32)>>,
+
     mut rx_stop_rec: BusReader<bool>,
 ) -> std::thread::JoinHandle<(Vec<f32>, Vec<f32>)> {
     std::thread::spawn(move || {

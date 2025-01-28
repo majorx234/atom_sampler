@@ -11,6 +11,8 @@ pub fn start_wave_manager(
     ringbuffer_right_in: HeapCons<f32>,
     ringbuffer_left_out: HeapProd<f32>,
     ringbuffer_right_out: HeapProd<f32>,
+    ringbuffer_left_visual_out: HeapProd<(f32, f32)>,
+    ringbuffer_right_visual_out: HeapProd<(f32, f32)>,
     mut rx_atom_event: BusReader<AtomEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
@@ -20,6 +22,8 @@ pub fn start_wave_manager(
         let mut ringbuffer_right_in_opt = Some(ringbuffer_right_in);
         let mut ringbuffer_left_out_opt = Some(ringbuffer_left_out);
         let mut ringbuffer_right_out_opt = Some(ringbuffer_right_out);
+        let mut ringbuffer_left_visual_out_opt = Some(ringbuffer_left_visual_out);
+        let mut ringbuffer_right_visual_out_opt = Some(ringbuffer_right_visual_out);
 
         while run {
             let opt_atom_event: Option<AtomEvent> =
@@ -35,6 +39,8 @@ pub fn start_wave_manager(
                             wave_handler.start_recording(
                                 &mut ringbuffer_left_in_opt.take(),
                                 &mut ringbuffer_right_in_opt.take(),
+                                &mut ringbuffer_left_visual_out_opt.take(),
+                                &mut ringbuffer_right_visual_out_opt.take(),
                             );
                         } else {
                             wave_handler.stop_recording();
