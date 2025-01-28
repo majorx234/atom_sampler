@@ -17,8 +17,8 @@ fn main() {
     let ringbuffer_left_play = HeapRb::<f32>::new(192000);
     let ringbuffer_right_play = HeapRb::<f32>::new(192000);
 
-    let ringbuffer_left_visual = HeapRb::<(f32, f32)>::new(750);
-    let ringbuffer_right_visual = HeapRb::<(f32, f32)>::new(750);
+    let ringbuffer_left_visual = HeapRb::<(f32, f32)>::new(375);
+    let ringbuffer_right_visual = HeapRb::<(f32, f32)>::new(375);
 
     let (ringbuffer_left_in, ringbuffer_left_out) = ringbuffer_left.split();
     let (ringbuffer_right_in, ringbuffer_right_out) = ringbuffer_right.split();
