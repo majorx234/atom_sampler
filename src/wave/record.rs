@@ -7,8 +7,8 @@ use ringbuf::{
 pub fn start_recording(
     mut ringbuffer_left_in: HeapCons<f32>,
     mut ringbuffer_right_in: HeapCons<f32>,
-    ringbuffer_left_visual_in_opt: &mut Option<HeapProd<(f32, f32)>>,
-    ringbuffer_right_visual_in_opt: &mut Option<HeapProd<(f32, f32)>>,
+    mut ringbuffer_left_visual_in_opt: Option<HeapProd<(f32, f32)>>,
+    mut ringbuffer_right_visual_in_opt: Option<HeapProd<(f32, f32)>>,
 
     mut rx_stop_rec: BusReader<bool>,
 ) -> std::thread::JoinHandle<(Vec<f32>, Vec<f32>)> {
@@ -26,13 +26,38 @@ pub fn start_recording(
             if (vecpointer_left + length_left < wave_size)
                 && (vecpointer_right + length_right < wave_size)
             {
-                wave_left.splice(vecpointer_left..length_left, ringbuffer_left_in.pop_iter());
+                wave_left.splice(
+                    vecpointer_left..vecpointer_left + length_left,
+                    ringbuffer_left_in.pop_iter(),
+                );
+                let max_l = wave_left[vecpointer_left..vecpointer_left + length_left]
+                    .iter()
+                    .max_by(|a, b| a.total_cmp(b))
+                    .unwrap_or(&0.0);
+                let min_l = wave_left[vecpointer_left..vecpointer_left + length_left]
+                    .iter()
+                    .min_by(|a, b| a.total_cmp(b))
+                    .unwrap_or(&0.0);
                 vecpointer_left += length_left;
                 wave_right.splice(
-                    vecpointer_right..length_right,
+                    vecpointer_right..vecpointer_right + length_right,
                     ringbuffer_right_in.pop_iter(),
                 );
+                let max_r = wave_right[vecpointer_right..vecpointer_right + length_right]
+                    .iter()
+                    .max_by(|a, b| a.total_cmp(b))
+                    .unwrap_or(&0.0);
+                let min_r = wave_right[vecpointer_right..vecpointer_right + length_right]
+                    .iter()
+                    .min_by(|a, b| a.total_cmp(b))
+                    .unwrap_or(&0.0);
                 vecpointer_right += length_right;
+                if let Some(ref mut ringbuffer_left_visual_in) = ringbuffer_left_visual_in_opt {
+                    let _ = ringbuffer_left_visual_in.try_push((*max_l, *min_l));
+                }
+                if let Some(ref mut ringbuffer_right_visual_in) = ringbuffer_right_visual_in_opt {
+                    let _ = ringbuffer_right_visual_in.try_push((*max_r, *min_r));
+                }
             } else {
                 ringbuffer_left_in.clear();
                 ringbuffer_right_in.clear();

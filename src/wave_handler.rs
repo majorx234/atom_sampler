@@ -53,14 +53,26 @@ impl WaveHandler {
         ) {
             self.tx_stop_rec_bus = Some(Bus::<bool>::new(1));
             let rx1_stop_rec = self.tx_stop_rec_bus.as_mut().unwrap().add_rx();
-
-            self.rec_processing = Some(start_recording(
-                ringbuffer_left_in,
-                ringbuffer_right_in,
-                ringbuffer_left_visual_in_opt,
-                ringbuffer_right_visual_in_opt,
-                rx1_stop_rec,
-            ));
+            if let (Some(ringbuffer_left_visual_in), Some(ringbuffer_right_visual_in)) = (
+                ringbuffer_left_visual_in_opt.take(),
+                ringbuffer_right_visual_in_opt.take(),
+            ) {
+                self.rec_processing = Some(start_recording(
+                    ringbuffer_left_in,
+                    ringbuffer_right_in,
+                    Some(ringbuffer_left_visual_in),
+                    Some(ringbuffer_right_visual_in),
+                    rx1_stop_rec,
+                ));
+            } else {
+                self.rec_processing = Some(start_recording(
+                    ringbuffer_left_in,
+                    ringbuffer_right_in,
+                    None,
+                    None,
+                    rx1_stop_rec,
+                ));
+            }
             self.state_recording = true;
         }
     }
