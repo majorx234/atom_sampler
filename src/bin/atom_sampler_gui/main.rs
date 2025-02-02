@@ -68,6 +68,7 @@ fn main() {
     let n_items = msgs.len();
     let atom_sampler_app = AtomSamplerApp::new(
         false,
+        false,
         DebugConsole { msgs, n_items },
         tx_close,
         tx_atom_event,
