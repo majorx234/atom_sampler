@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, Color32, Rangef, Rgba, ScrollArea},
+    egui::{self, Color32, Rangef, ScrollArea},
     epaint::Stroke,
 };
 
@@ -63,6 +63,7 @@ pub fn pad_button_ui(
     ui: &mut egui::Ui,
     status_wave_loaded: &mut bool,
     dropped_files: &mut Vec<egui::DroppedFile>,
+    is_pressed: bool,
 ) -> egui::Response {
     let mut clicked = false;
     let width = 4.0;
@@ -78,7 +79,7 @@ pub fn pad_button_ui(
     if ui.is_rect_visible(response.rect) {
         let visuals = ui.style().visuals.clone();
         let rounding = rect.height() / 8.0;
-        let color = if clicked {
+        let color = if is_pressed {
             visuals.warn_fg_color
         } else {
             visuals.extreme_bg_color
@@ -97,8 +98,9 @@ pub fn pad_button_ui(
 pub fn pad_button<'a>(
     status_wave_loaded: &'a mut bool,
     dropped_files: &'a mut Vec<egui::DroppedFile>,
+    is_pressed: bool,
 ) -> impl egui::Widget + 'a {
-    move |ui: &mut egui::Ui| pad_button_ui(ui, status_wave_loaded, dropped_files)
+    move |ui: &mut egui::Ui| pad_button_ui(ui, status_wave_loaded, dropped_files, is_pressed)
 }
 
 pub struct DebugConsole {

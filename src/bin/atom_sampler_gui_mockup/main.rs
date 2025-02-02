@@ -8,6 +8,7 @@ fn main() {
     let n_items = msgs.len();
     let mockup_gui = MockupGUI {
         wave_loaded: false,
+        pad_button_is_pressed: false,
         console: DebugConsole { msgs, n_items },
     };
     let options = eframe::NativeOptions {

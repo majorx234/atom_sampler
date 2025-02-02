@@ -80,8 +80,9 @@ impl eframe::App for AtomSamplerApp {
         });
         egui::CentralPanel::default().show(ctx, |ui| {
             let mut dropped_files: Vec<egui::DroppedFile> = Vec::new();
+            let test: bool = false;
             let pad_button_clicked_rect =
-                pad_button_ui(ui, &mut self.wave_loaded, &mut dropped_files)
+                pad_button_ui(ui, &mut self.wave_loaded, &mut dropped_files, test)
                     .interact(egui::Sense {
                         click: true,
                         drag: true,

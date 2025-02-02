@@ -1,8 +1,9 @@
 use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole};
-use eframe::egui::{self, ViewportCommand, Widget};
+use eframe::egui::{self, PointerButton, ViewportCommand, Widget};
 
 pub struct MockupGUI {
     pub wave_loaded: bool,
+    pub pad_button_is_pressed: bool,
     pub console: DebugConsole,
 }
 
@@ -10,6 +11,7 @@ impl Default for MockupGUI {
     fn default() -> Self {
         Self {
             wave_loaded: false,
+            pad_button_is_pressed: false,
             console: DebugConsole {
                 n_items: 0,
                 msgs: Vec::new(),
@@ -27,14 +29,27 @@ impl eframe::App for MockupGUI {
         });
         egui::CentralPanel::default().show(ctx, |ui| {
             let mut dropped_files: Vec<egui::DroppedFile> = Vec::new();
-            let pad_button_clicked_rect =
-                pad_button_ui(ui, &mut self.wave_loaded, &mut dropped_files)
-                    .interact(egui::Sense {
-                        click: true,
-                        drag: true,
-                        focusable: true,
-                    })
-                    .rect;
+            let pad_button_clicked_rect = pad_button_ui(
+                ui,
+                &mut self.wave_loaded,
+                &mut dropped_files,
+                self.pad_button_is_pressed,
+            )
+            .interact(egui::Sense {
+                click: true,
+                drag: true,
+                focusable: true,
+            })
+            .rect;
+            ui.input(|input| {
+                if input.pointer.button_pressed(PointerButton::Primary)
+                    && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
+                {
+                    self.pad_button_is_pressed = true;
+                } else if input.pointer.button_released(PointerButton::Primary) {
+                    self.pad_button_is_pressed = false
+                }
+            });
             if !dropped_files.is_empty() {
                 self.console.add_entry("droped file:".to_string());
                 for (idx, file) in dropped_files.iter().enumerate() {
