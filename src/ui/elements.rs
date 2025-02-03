@@ -76,6 +76,29 @@ pub fn pad_button_ui(
         response.mark_changed(); // report back that the value changed
                                  // TODO animation when clicked
     }
+
+    // internal check for mouse down/up on button
+    // for future use with state object
+    let mut mouse_pressed = false;
+    ui.input(|input| {
+        if input.pointer.button_pressed(egui::PointerButton::Primary)
+            && response
+                .rect
+                .contains(input.pointer.press_origin().unwrap())
+        {
+            mouse_pressed = true;
+        } else if input.pointer.button_released(egui::PointerButton::Primary)
+            && input.pointer.interact_pos().is_some()
+        {
+            if response
+                .rect
+                .contains(input.pointer.interact_pos().unwrap())
+            {
+                mouse_pressed = false;
+            }
+        }
+    });
+
     if ui.is_rect_visible(response.rect) {
         let visuals = ui.style().visuals.clone();
         let rounding = rect.height() / 8.0;
