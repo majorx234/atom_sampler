@@ -39,7 +39,7 @@ impl WavePlotter {
 
         response
     }
-    pub fn load_wave(&mut self, wave: &[f32]) {
+    pub fn push_wave(&mut self, wave: &[f32]) {
         let segments: usize = (self.width * self.dpi as f32) as usize;
         assert!(segments > wave.len());
         let sample_per_segment = wave.len() / segments;
@@ -55,7 +55,10 @@ impl WavePlotter {
                 }
             }
         }
-        self.limits = limits;
+        self.limits.append(&mut limits);
+    }
+    pub fn reset_wave(&mut self) {
+        self.limits = Vec::new();
     }
 }
 
