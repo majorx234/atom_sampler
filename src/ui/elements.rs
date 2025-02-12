@@ -3,7 +3,7 @@ use eframe::{
     epaint::Stroke,
 };
 
-struct WavePlotter {
+pub struct WavePlotter {
     inited: bool,
     wave_loaded: bool,
     width: f32,
@@ -41,7 +41,7 @@ impl WavePlotter {
     }
     pub fn load_wave(&mut self, wave: &[f32]) {
         let segments: usize = (self.width * self.dpi as f32) as usize;
-        assert!(segments > wave.len());
+        assert!(segments < wave.len());
         let sample_per_segment = wave.len() / segments;
         // ToDo handle residium, fill rest up with zeros
         let mut limits: Vec<(f32, f32)> = vec![(0.0, 0.0); segments];
@@ -159,8 +159,8 @@ impl DebugConsole {
         if self.n_items > 0 {
             ScrollArea::vertical()
                 .stick_to_bottom(true)
-                .min_scrolled_height(600.0)
-                .max_height(600.0)
+                .min_scrolled_height(60.0)
+                .max_height(240.0)
                 .min_scrolled_width(500.0)
                 .max_width(500.0)
                 .show_rows(ui, row_height, self.n_items, |ui, row_range| {

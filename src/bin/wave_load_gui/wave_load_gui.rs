@@ -1,4 +1,4 @@
-use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole};
+use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole, WavePlotter};
 use eframe::egui::{self, menu, Button, Context, PointerButton, ViewportCommand, Widget};
 use hound;
 use std::path::PathBuf;
@@ -24,6 +24,7 @@ pub struct WaveLoadGUI {
     pub console: DebugConsole,
     picked_file: Option<PathBuf>,
     wave_data: Option<Vec<f32>>,
+    wave_plotter: Option<WavePlotter>,
 }
 
 impl Default for WaveLoadGUI {
@@ -37,6 +38,7 @@ impl Default for WaveLoadGUI {
             },
             picked_file: None,
             wave_data: Some(Vec::new()),
+            wave_plotter: None,
         }
     }
 }
@@ -47,7 +49,7 @@ impl eframe::App for WaveLoadGUI {
                 ui.heading("WaveLoadGui");
             })
         });
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |mut ui| {
             ui.label("Filepath:");
             ui.text_edit_singleline(&mut self.file_name_str);
             if ui.button("load file").clicked() {
@@ -63,6 +65,10 @@ impl eframe::App for WaveLoadGUI {
                     if picked_file.is_file() {
                         if let Ok(samples_vec) = read_wav_file(picked_file) {
                             let num_samples = samples_vec.len();
+
+                            let mut wave_plotter = WavePlotter::new(1000.0, 200.0);
+                            wave_plotter.load_wave(&samples_vec);
+                            self.wave_plotter = Some(wave_plotter);
                             self.wave_data = Some(samples_vec);
                             self.wave_loaded = true;
                             self.console
@@ -71,6 +77,11 @@ impl eframe::App for WaveLoadGUI {
                     }
                 }
             }
+            if let Some(ref wave_plotter) = self.wave_plotter {
+                wave_plotter.wave_plot_ui(ui, 100);
+            }
+        });
+        egui::TopBottomPanel::bottom("consol").show(ctx, |ui| {
             self.console.debug_console_ui(ui);
         });
     }
