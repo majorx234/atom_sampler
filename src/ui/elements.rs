@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, Color32, Rangef, ScrollArea},
+    egui::{self, Color32, Rangef, Rect, ScrollArea},
     epaint::Stroke,
 };
 
@@ -27,16 +27,23 @@ impl WavePlotter {
         let desired_size = ui.spacing().interact_size.y * egui::vec2(self.width, self.height);
         let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
         let visuals = ui.style().visuals.clone();
-        ui.painter()
-            .rect(rect, 0.0, visuals.panel_fill, Stroke::NONE);
-        for (x, (y_low, y_high)) in self.limits.iter().enumerate() {
+        ui.painter().rect(
+            rect,
+            0.0,
+            visuals.panel_fill,
+            Stroke::new(1.0, Color32::DARK_BLUE),
+        );
+        let x_max = self.limits.len();
+        for (x_idx, (y_low, y_high)) in self.limits.iter().enumerate() {
+            let x = x_idx as f32 * rect.width() / x_max as f32 + rect.min.x;
+            let y_low_in_rect = (*y_low + 1.0) * rect.height() / 2.0 + rect.min.y;
+            let y_high_in_rect = (*y_high + 1.0) * rect.height() / 2.0 + rect.min.y;
             ui.painter().vline(
-                x as f32,
-                Rangef::new(*y_low, *y_high),
+                x,
+                Rangef::new(y_low_in_rect, y_high_in_rect),
                 Stroke::new(1.0, Color32::GREEN),
             );
         }
-
         response
     }
     pub fn load_wave(&mut self, wave: &[f32]) {
@@ -56,9 +63,11 @@ impl WavePlotter {
             }
         }
         self.limits = limits;
+        self.wave_loaded = true;
     }
     pub fn reset_wave(&mut self) {
         self.limits = Vec::new();
+        self.wave_loaded = false;
     }
 }
 

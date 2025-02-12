@@ -66,7 +66,7 @@ impl eframe::App for WaveLoadGUI {
                         if let Ok(samples_vec) = read_wav_file(picked_file) {
                             let num_samples = samples_vec.len();
 
-                            let mut wave_plotter = WavePlotter::new(1000.0, 200.0);
+                            let mut wave_plotter = WavePlotter::new(20.0, 4.0);
                             wave_plotter.load_wave(&samples_vec);
                             self.wave_plotter = Some(wave_plotter);
                             self.wave_data = Some(samples_vec);
