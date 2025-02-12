@@ -121,6 +121,20 @@ pub fn pad_button_ui(
     });
     response
 }
+
+pub fn pad_button_ui2(
+    ui: &mut egui::Ui,
+    status_wave_loaded: &mut bool,
+    dropped_files: &mut Vec<egui::DroppedFile>,
+) -> egui::Response {
+    let mut clicked = false;
+    let width = 4.0;
+    let height = 4.0;
+    let desired_size = ui.spacing().interact_size.y * egui::vec2(width, height);
+    let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+    response
+}
+
 pub fn pad_button<'a>(
     status_wave_loaded: &'a mut bool,
     dropped_files: &'a mut Vec<egui::DroppedFile>,
