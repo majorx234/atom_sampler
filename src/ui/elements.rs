@@ -48,6 +48,7 @@ impl WavePlotter {
     }
     pub fn load_wave(&mut self, wave: &[f32]) {
         let segments: usize = (self.width * self.dpi as f32) as usize;
+        // TODO check if segments are more than  wave length
         assert!(segments < wave.len());
         let sample_per_segment = wave.len() / segments;
         // ToDo handle residium, fill rest up with zeros

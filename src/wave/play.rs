@@ -4,7 +4,7 @@ use ringbuf::{
     traits::{Observer, Producer},
     HeapProd,
 };
-use std::{process::exit, thread, time::Duration};
+use std::{thread, time::Duration};
 
 pub fn start_playback(
     mut ringbuffer_left_out: HeapProd<f32>,

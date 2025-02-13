@@ -1,18 +1,18 @@
 use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole, WavePlotter};
 use eframe::egui::{self, menu, Button, Context, PointerButton, ViewportCommand, Widget};
-use hound;
 use std::path::PathBuf;
 
 fn read_wav_file(file_path: &PathBuf) -> Result<Vec<f32>, hound::Error> {
     let mut reader = hound::WavReader::open(file_path).unwrap();
     let spec = reader.spec();
+    let max_val = 2.0f32.powf(spec.bits_per_sample as f32) / 2.0f32;
 
     let wave_data: Vec<f32> = match spec.sample_format {
         hound::SampleFormat::Float => reader.samples::<f32>().flatten().collect(),
         hound::SampleFormat::Int => reader
-            .samples::<i16>()
+            .samples::<i32>()
             .flatten()
-            .map(|x| x as f32 / i16::MAX as f32)
+            .map(|x| x as f32 / max_val)
             .collect(),
     };
 
