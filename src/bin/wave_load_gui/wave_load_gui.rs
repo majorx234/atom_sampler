@@ -25,6 +25,7 @@ pub struct WaveLoadGUI {
     picked_file: Option<PathBuf>,
     wave_data: Option<Vec<f32>>,
     wave_plotter: Option<WavePlotter>,
+    pub pad_button_is_pressed: bool,
 }
 
 impl Default for WaveLoadGUI {
@@ -39,6 +40,7 @@ impl Default for WaveLoadGUI {
             picked_file: None,
             wave_data: Some(Vec::new()),
             wave_plotter: None,
+            pad_button_is_pressed: false,
         }
     }
 }
@@ -77,8 +79,46 @@ impl eframe::App for WaveLoadGUI {
                     }
                 }
             }
+            let mut dropped_files: Vec<egui::DroppedFile> = Vec::new();
+            let pad_button_clicked_rect = pad_button_ui(
+                ui,
+                &mut self.wave_loaded,
+                &mut dropped_files,
+                self.pad_button_is_pressed,
+            )
+            .interact(egui::Sense {
+                click: true,
+                drag: true,
+                focusable: true,
+            })
+            .rect;
             if let Some(ref wave_plotter) = self.wave_plotter {
                 wave_plotter.wave_plot_ui(ui, 100);
+            }
+            ui.input(|input| {
+                if input.pointer.button_pressed(PointerButton::Primary)
+                    && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
+                {
+                    self.pad_button_is_pressed = true;
+                    self.console.add_entry("clicked".to_string());
+                } else if input.pointer.button_released(PointerButton::Primary) {
+                    self.pad_button_is_pressed = false;
+                    self.console.add_entry("released".to_string());
+                }
+            });
+            if !dropped_files.is_empty() {
+                self.console.add_entry("droped file:".to_string());
+                for (idx, file) in dropped_files.iter().enumerate() {
+                    let filepath = file.path.clone().expect("no file path");
+                    let file_msg = format!(
+                        "file {}: {} - Mime: {}, Filepath: {}",
+                        idx,
+                        file.name,
+                        file.mime,
+                        filepath.as_path().display()
+                    );
+                    self.console.add_entry(file_msg);
+                }
             }
         });
         egui::TopBottomPanel::bottom("consol").show(ctx, |ui| {
