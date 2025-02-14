@@ -1,14 +1,13 @@
-use std::{mem::MaybeUninit, sync::Arc};
 
 use atom_sampler_lib::{
     atom_event::AtomEvent,
-    ui::elements::{pad_button, pad_button_ui, DebugConsole},
+    ui::elements::{pad_button_ui, DebugConsole},
 };
 use bus::Bus;
-use eframe::egui::{self, ViewportCommand, Widget};
+use eframe::egui::{self};
 use ringbuf::{
     traits::{Consumer, Observer},
-    HeapCons, HeapProd,
+    HeapCons,
 };
 pub struct AtomSamplerApp {
     pub wave_loaded: bool,

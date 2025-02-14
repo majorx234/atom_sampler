@@ -31,10 +31,10 @@ pub fn start_jack_thread(
         let midi_in = client.register_port("midi_in", jack::MidiIn).unwrap();
 
         let in_a = client
-            .register_port("as_in_l", jack::AudioIn::default())
+            .register_port("as_in_l", jack::AudioIn)
             .unwrap();
         let in_b = client
-            .register_port("as_in_r", jack::AudioIn::default())
+            .register_port("as_in_r", jack::AudioIn)
             .unwrap();
         let _midi_in = client.register_port("as_midi_in", jack::MidiIn).unwrap();
         let mut frame_size = client.buffer_size() as usize;

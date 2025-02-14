@@ -10,6 +10,12 @@ pub struct Sample {
     pan: f32,
 }
 
+impl Default for Sample {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Sample {
     pub fn new() -> Self {
         Sample {
@@ -30,7 +36,7 @@ impl Sample {
     pub fn load_from_wav(&mut self, path: PathBuf) -> Result<()> {
         let mut reader = hound::WavReader::open(path)?;
         let format = reader.spec().sample_format;
-        let mut nsamples = reader.len() as usize;
+        let nsamples = reader.len() as usize;
         match format {
             hound::SampleFormat::Float => {
                 let data: Vec<f32> = reader
