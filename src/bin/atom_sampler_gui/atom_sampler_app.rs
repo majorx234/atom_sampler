@@ -88,7 +88,7 @@ impl eframe::App for AtomSamplerApp {
                 ui,
                 &mut self.wave_loaded,
                 &mut dropped_files,
-                self.pad_button_is_pressed,
+                &mut self.pad_button_is_pressed,
             )
             .interact(egui::Sense {
                 click: true,

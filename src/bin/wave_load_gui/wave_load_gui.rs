@@ -51,7 +51,7 @@ impl eframe::App for WaveLoadGUI {
                 ui.heading("WaveLoadGui");
             })
         });
-        egui::CentralPanel::default().show(ctx, |mut ui| {
+        egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("Filepath:");
             ui.text_edit_singleline(&mut self.file_name_str);
             if ui.button("load file").clicked() {
@@ -80,29 +80,12 @@ impl eframe::App for WaveLoadGUI {
                 }
             }
             let mut dropped_files: Vec<egui::DroppedFile> = Vec::new();
-            let pad_button_clicked_rect = pad_button_ui(
+            let _ = pad_button_ui(
                 ui,
                 &mut self.wave_loaded,
                 &mut dropped_files,
-                self.pad_button_is_pressed,
-            )
-            .interact(egui::Sense {
-                click: true,
-                drag: true,
-                focusable: true,
-            })
-            .rect;
-            ui.input(|input| {
-                if input.pointer.button_pressed(PointerButton::Primary)
-                    && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
-                {
-                    self.pad_button_is_pressed = true;
-                    self.console.add_entry("clicked".to_string());
-                } else if input.pointer.button_released(PointerButton::Primary) {
-                    self.pad_button_is_pressed = false;
-                    self.console.add_entry("released".to_string());
-                }
-            });
+                &mut self.pad_button_is_pressed,
+            );
             let mut dropped_file_paths = Vec::new();
             if !dropped_files.is_empty() {
                 self.console.add_entry("droped file:".to_string());

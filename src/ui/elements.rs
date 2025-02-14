@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, Color32, Rangef, Rect, ScrollArea},
+    egui::{self, Color32, PointerButton, Rangef, ScrollArea},
     epaint::Stroke,
 };
 
@@ -25,7 +25,7 @@ impl WavePlotter {
     }
     pub fn wave_plot_ui(&self, ui: &mut egui::Ui, dpi: usize) -> egui::Response {
         let desired_size = ui.spacing().interact_size.y * egui::vec2(self.width, self.height);
-        let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+        let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
         let visuals = ui.style().visuals.clone();
         ui.painter().rect(
             rect,
@@ -76,7 +76,7 @@ pub fn pad_button_ui(
     ui: &mut egui::Ui,
     status_wave_loaded: &mut bool,
     dropped_files: &mut Vec<egui::DroppedFile>,
-    is_pressed: bool,
+    is_pressed: &mut bool,
 ) -> egui::Response {
     let mut clicked = false;
     let width = 4.0;
@@ -84,38 +84,35 @@ pub fn pad_button_ui(
     let desired_size = ui.spacing().interact_size.y * egui::vec2(width, height);
     let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
 
+    let dont_check_release_in_rect: bool = true;
     if response.clicked() {
         clicked = true;
         response.mark_changed(); // report back that the value changed
                                  // TODO animation when clicked
     }
 
-    // internal check for mouse down/up on button
-    // for future use with state object
-    let mut mouse_pressed = false;
     ui.input(|input| {
-        if input.pointer.button_pressed(egui::PointerButton::Primary)
+        if input.pointer.button_pressed(PointerButton::Primary)
             && response
                 .rect
                 .contains(input.pointer.press_origin().unwrap())
         {
-            mouse_pressed = true;
-        } else if input.pointer.button_released(egui::PointerButton::Primary)
+            *is_pressed = true;
+        } else if input.pointer.button_released(PointerButton::Primary)
             && input.pointer.interact_pos().is_some()
-        {
-            if response
+            && (response
                 .rect
                 .contains(input.pointer.interact_pos().unwrap())
-            {
-                mouse_pressed = false;
-            }
+                || dont_check_release_in_rect)
+        {
+            *is_pressed = false;
         }
     });
 
     if ui.is_rect_visible(response.rect) {
         let visuals = ui.style().visuals.clone();
         let rounding = rect.height() / 8.0;
-        let color = if is_pressed {
+        let color = if *is_pressed {
             visuals.warn_fg_color
         } else {
             visuals.extreme_bg_color
@@ -123,11 +120,14 @@ pub fn pad_button_ui(
         ui.painter().rect(rect, rounding, color, Stroke::NONE);
     }
     ui.ctx().input(|i| {
-        if !i.raw.dropped_files.is_empty() {
-            if rect.contains(i.pointer.interact_pos().unwrap()) {
-                dropped_files.append(&mut i.raw.dropped_files.clone());
-            }
+        if !i.raw.dropped_files.is_empty() && rect.contains(i.pointer.interact_pos().unwrap()) {
+            dropped_files.append(&mut i.raw.dropped_files.clone());
         }
+    });
+    response.interact(egui::Sense {
+        click: true,
+        drag: true,
+        focusable: true,
     });
     response
 }
@@ -137,18 +137,17 @@ pub fn pad_button_ui2(
     status_wave_loaded: &mut bool,
     dropped_files: &mut Vec<egui::DroppedFile>,
 ) -> egui::Response {
-    let mut clicked = false;
     let width = 4.0;
     let height = 4.0;
     let desired_size = ui.spacing().interact_size.y * egui::vec2(width, height);
-    let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+    let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
     response
 }
 
 pub fn pad_button<'a>(
     status_wave_loaded: &'a mut bool,
     dropped_files: &'a mut Vec<egui::DroppedFile>,
-    is_pressed: bool,
+    is_pressed: &'a mut bool,
 ) -> impl egui::Widget + 'a {
     move |ui: &mut egui::Ui| pad_button_ui(ui, status_wave_loaded, dropped_files, is_pressed)
 }

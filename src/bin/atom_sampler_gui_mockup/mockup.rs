@@ -1,5 +1,5 @@
-use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole};
-use eframe::egui::{self, PointerButton, ViewportCommand, Widget};
+use atom_sampler_lib::ui::elements::{pad_button_ui, DebugConsole};
+use eframe::egui::{self, PointerButton};
 
 pub struct MockupGUI {
     pub wave_loaded: bool,
@@ -33,7 +33,7 @@ impl eframe::App for MockupGUI {
                 ui,
                 &mut self.wave_loaded,
                 &mut dropped_files,
-                self.pad_button_is_pressed,
+                &mut self.pad_button_is_pressed,
             )
             .interact(egui::Sense {
                 click: true,
@@ -70,12 +70,8 @@ impl eframe::App for MockupGUI {
                     && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
                 {
                     self.console.add_entry("clicked".to_string());
-                } else if input.pointer.button_released(egui::PointerButton::Primary)
-                    && input.pointer.interact_pos().is_some()
-                {
-                    if pad_button_clicked_rect.contains(input.pointer.interact_pos().unwrap()) {
-                        self.console.add_entry("released".to_string());
-                    }
+                } else if input.pointer.button_released(egui::PointerButton::Primary) && input.pointer.interact_pos().is_some() && pad_button_clicked_rect.contains(input.pointer.interact_pos().unwrap()) {
+                    self.console.add_entry("released".to_string());
                 }
             });
             self.console.debug_console_ui(ui);
