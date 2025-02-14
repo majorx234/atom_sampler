@@ -92,9 +92,6 @@ impl eframe::App for WaveLoadGUI {
                 focusable: true,
             })
             .rect;
-            if let Some(ref wave_plotter) = self.wave_plotter {
-                wave_plotter.wave_plot_ui(ui, 100);
-            }
             ui.input(|input| {
                 if input.pointer.button_pressed(PointerButton::Primary)
                     && pad_button_clicked_rect.contains(input.pointer.press_origin().unwrap())
@@ -106,6 +103,7 @@ impl eframe::App for WaveLoadGUI {
                     self.console.add_entry("released".to_string());
                 }
             });
+            let mut dropped_file_paths = Vec::new();
             if !dropped_files.is_empty() {
                 self.console.add_entry("droped file:".to_string());
                 for (idx, file) in dropped_files.iter().enumerate() {
@@ -118,10 +116,36 @@ impl eframe::App for WaveLoadGUI {
                         filepath.as_path().display()
                     );
                     self.console.add_entry(file_msg);
+                    dropped_file_paths.push(filepath);
                 }
             }
+            if dropped_file_paths.len() > 0 {
+                self.picked_file = if dropped_file_paths[0].is_file() {
+                    Some(dropped_file_paths[0].clone())
+                } else {
+                    self.picked_file.take()
+                };
+                if let Some(ref picked_file) = self.picked_file {
+                    if picked_file.is_file() {
+                        if let Ok(samples_vec) = read_wav_file(picked_file) {
+                            let num_samples = samples_vec.len();
+
+                            let mut wave_plotter = WavePlotter::new(20.0, 4.0);
+                            wave_plotter.load_wave(&samples_vec);
+                            self.wave_plotter = Some(wave_plotter);
+                            self.wave_data = Some(samples_vec);
+                            self.wave_loaded = true;
+                            self.console
+                                .add_entry(format!("wave loaded: {} samples", num_samples));
+                        }
+                    }
+                }
+            }
+            if let Some(ref wave_plotter) = self.wave_plotter {
+                wave_plotter.wave_plot_ui(ui, 100);
+            }
         });
-        egui::TopBottomPanel::bottom("consol").show(ctx, |ui| {
+        egui::TopBottomPanel::bottom("console").show(ctx, |ui| {
             self.console.debug_console_ui(ui);
         });
     }
