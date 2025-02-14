@@ -3,7 +3,7 @@ use eframe::egui::{self, menu, Button, Context, PointerButton, ViewportCommand, 
 use std::path::PathBuf;
 
 fn read_wav_file(file_path: &PathBuf) -> Result<Vec<f32>, hound::Error> {
-    let mut reader = hound::WavReader::open(file_path).unwrap();
+    let mut reader = hound::WavReader::open(file_path)?;
     let spec = reader.spec();
     let max_val = 2.0f32.powf(spec.bits_per_sample as f32) / 2.0f32;
 
