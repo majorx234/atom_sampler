@@ -102,7 +102,7 @@ impl eframe::App for WaveLoadGUI {
                     dropped_file_paths.push(filepath);
                 }
             }
-            if dropped_file_paths.len() > 0 {
+            if !dropped_file_paths.is_empty() {
                 self.picked_file = if dropped_file_paths[0].is_file() {
                     Some(dropped_file_paths[0].clone())
                 } else {
@@ -125,7 +125,7 @@ impl eframe::App for WaveLoadGUI {
                 }
             }
             if let Some(ref wave_plotter) = self.wave_plotter {
-                wave_plotter.wave_plot_ui(ui, 100);
+                wave_plotter.wave_plot_ui(ui, 100, 0);
             }
         });
         egui::TopBottomPanel::bottom("console").show(ctx, |ui| {

@@ -10,6 +10,7 @@ pub struct WavePlotter {
     height: f32,
     limits: Vec<(f32, f32)>,
     dpi: usize,
+    wave_length: usize,
 }
 
 impl WavePlotter {
@@ -21,9 +22,10 @@ impl WavePlotter {
             height,
             limits: Vec::new(),
             dpi: 100,
+            wave_length: 0,
         }
     }
-    pub fn wave_plot_ui(&self, ui: &mut egui::Ui, dpi: usize) -> egui::Response {
+    pub fn wave_plot_ui(&self, ui: &mut egui::Ui, dpi: usize, pos: usize) -> egui::Response {
         let desired_size = ui.spacing().interact_size.y * egui::vec2(self.width, self.height);
         let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
         let visuals = ui.style().visuals.clone();
@@ -43,6 +45,13 @@ impl WavePlotter {
                 Rangef::new(y_low_in_rect, y_high_in_rect),
                 Stroke::new(1.0, Color32::GREEN),
             );
+            let pos_in_limits = pos as f32 * (self.limits.len() as f32) / (self.wave_length as f32);
+            let pos_in_rect = pos_in_limits * rect.width() / x_max as f32 + rect.min.x;
+            ui.painter().vline(
+                pos_in_rect,
+                Rangef::new(rect.min.y, rect.max.y),
+                Stroke::new(1.0, Color32::YELLOW),
+            )
         }
         response
     }
