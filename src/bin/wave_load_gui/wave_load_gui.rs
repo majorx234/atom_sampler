@@ -25,6 +25,7 @@ pub struct WaveLoadGUI {
     picked_file: Option<PathBuf>,
     wave_data: Option<Vec<f32>>,
     wave_plotter: Option<WavePlotter>,
+    pub wave_pos: Option<usize>,
     pub pad_button_is_pressed: bool,
 }
 
@@ -40,6 +41,7 @@ impl Default for WaveLoadGUI {
             picked_file: None,
             wave_data: Some(Vec::new()),
             wave_plotter: None,
+            wave_pos: None,
             pad_button_is_pressed: false,
         }
     }
@@ -73,6 +75,7 @@ impl eframe::App for WaveLoadGUI {
                             self.wave_plotter = Some(wave_plotter);
                             self.wave_data = Some(samples_vec);
                             self.wave_loaded = true;
+                            self.wave_pos = Some(0);
                             self.console
                                 .add_entry(format!("wave loaded: {} samples", num_samples));
                         }
@@ -80,52 +83,68 @@ impl eframe::App for WaveLoadGUI {
                 }
             }
             let mut dropped_files: Vec<egui::DroppedFile> = Vec::new();
-            let _ = pad_button_ui(
-                ui,
-                &mut self.wave_loaded,
-                &mut dropped_files,
-                &mut self.pad_button_is_pressed,
-            );
-            let mut dropped_file_paths = Vec::new();
-            if !dropped_files.is_empty() {
-                self.console.add_entry("droped file:".to_string());
-                for (idx, file) in dropped_files.iter().enumerate() {
-                    let filepath = file.path.clone().expect("no file path");
-                    let file_msg = format!(
-                        "file {}: {} - Mime: {}, Filepath: {}",
-                        idx,
-                        file.name,
-                        file.mime,
-                        filepath.as_path().display()
-                    );
-                    self.console.add_entry(file_msg);
-                    dropped_file_paths.push(filepath);
+            ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
+                let _ = pad_button_ui(
+                    ui,
+                    &mut self.wave_loaded,
+                    &mut dropped_files,
+                    &mut self.pad_button_is_pressed,
+                );
+                if let Some(ref mut wave_pos) = self.wave_pos {
+                    if self.pad_button_is_pressed {
+                        *wave_pos += 1000;
+                        let max_len = self.wave_data.as_ref().unwrap().len();
+                        *wave_pos = (*wave_pos).min(max_len);
+                    } else {
+                        *wave_pos = 0;
+                    }
                 }
-            }
-            if !dropped_file_paths.is_empty() {
-                self.picked_file = if dropped_file_paths[0].is_file() {
-                    Some(dropped_file_paths[0].clone())
-                } else {
-                    self.picked_file.take()
-                };
-                if let Some(ref picked_file) = self.picked_file {
-                    if picked_file.is_file() {
-                        if let Ok(samples_vec) = read_wav_file(picked_file) {
-                            let num_samples = samples_vec.len();
+                let mut dropped_file_paths = Vec::new();
+                if !dropped_files.is_empty() {
+                    self.console.add_entry("droped file:".to_string());
+                    for (idx, file) in dropped_files.iter().enumerate() {
+                        let filepath = file.path.clone().expect("no file path");
+                        let file_msg = format!(
+                            "file {}: {} - Mime: {}, Filepath: {}",
+                            idx,
+                            file.name,
+                            file.mime,
+                            filepath.as_path().display()
+                        );
+                        self.console.add_entry(file_msg);
+                        dropped_file_paths.push(filepath);
+                    }
+                }
+                if !dropped_file_paths.is_empty() {
+                    self.picked_file = if dropped_file_paths[0].is_file() {
+                        Some(dropped_file_paths[0].clone())
+                    } else {
+                        self.picked_file.take()
+                    };
+                    if let Some(ref picked_file) = self.picked_file {
+                        if picked_file.is_file() {
+                            if let Ok(samples_vec) = read_wav_file(picked_file) {
+                                let num_samples = samples_vec.len();
 
-                            let mut wave_plotter = WavePlotter::new(20.0, 4.0);
-                            wave_plotter.load_wave(&samples_vec);
-                            self.wave_plotter = Some(wave_plotter);
-                            self.wave_data = Some(samples_vec);
-                            self.wave_loaded = true;
-                            self.console
-                                .add_entry(format!("wave loaded: {} samples", num_samples));
+                                let mut wave_plotter = WavePlotter::new(20.0, 4.0);
+                                wave_plotter.load_wave(&samples_vec);
+                                self.wave_plotter = Some(wave_plotter);
+                                self.wave_data = Some(samples_vec);
+                                self.wave_loaded = true;
+                                self.wave_pos = Some(0);
+                                self.console
+                                    .add_entry(format!("wave loaded: {} samples", num_samples));
+                            }
                         }
                     }
                 }
-            }
+            });
             if let Some(ref wave_plotter) = self.wave_plotter {
-                wave_plotter.wave_plot_ui(ui, 100, 0);
+                if let Some(wave_pos) = self.wave_pos {
+                    wave_plotter.wave_plot_ui(ui, 100, wave_pos);
+                } else {
+                    wave_plotter.wave_plot_ui(ui, 100, 0);
+                }
             }
         });
         egui::TopBottomPanel::bottom("console").show(ctx, |ui| {
