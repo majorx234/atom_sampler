@@ -58,17 +58,28 @@ impl WavePlotter {
     pub fn load_wave(&mut self, wave: &[f32]) {
         let segments: usize = (self.width * self.dpi as f32) as usize;
         // TODO check if segments are more than  wave length
-        assert!(segments < wave.len());
-        let sample_per_segment = wave.len() / segments;
-        // ToDo handle residium, fill rest up with zeros
         let mut limits: Vec<(f32, f32)> = vec![(0.0, 0.0); segments];
-        for segment in 0..segments {
-            for sample in 0..sample_per_segment {
-                let j = segment * sample_per_segment + sample;
-                if wave[j] < limits[segment].0 {
-                    limits[segment].0 = wave[j];
-                } else if wave[j] > limits[segment].1 {
-                    limits[segment].1 = wave[j];
+        if segments < wave.len() {
+            let sample_per_segment = wave.len() / segments;
+            // ToDo handle residium, fill rest up with zeros
+            for segment in 0..segments {
+                for sample in 0..sample_per_segment {
+                    let j = segment * sample_per_segment + sample;
+                    if wave[j] < limits[segment].0 {
+                        limits[segment].0 = wave[j];
+                    } else if wave[j] > limits[segment].1 {
+                        limits[segment].1 = wave[j];
+                    }
+                }
+            }
+        } else {
+            for (idx, (limit, wave)) in limits.iter_mut().zip(wave.iter()).enumerate() {
+                if *wave < 0.0 {
+                    limit.0 = *wave;
+                    limit.1 = 0.0;
+                } else {
+                    limit.0 = 0.0;
+                    limit.1 = *wave;
                 }
             }
         }
