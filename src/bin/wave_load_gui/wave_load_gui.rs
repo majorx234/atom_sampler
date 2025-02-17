@@ -83,6 +83,7 @@ impl eframe::App for WaveLoadGUI {
                 }
             }
             let mut dropped_files: Vec<egui::DroppedFile> = Vec::new();
+
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                 let _ = pad_button_ui(
                     ui,
@@ -138,14 +139,14 @@ impl eframe::App for WaveLoadGUI {
                         }
                     }
                 }
-            });
-            if let Some(ref wave_plotter) = self.wave_plotter {
-                if let Some(wave_pos) = self.wave_pos {
-                    wave_plotter.wave_plot_ui(ui, 100, wave_pos);
-                } else {
-                    wave_plotter.wave_plot_ui(ui, 100, 0);
+                if let Some(ref wave_plotter) = self.wave_plotter {
+                    if let Some(wave_pos) = self.wave_pos {
+                        wave_plotter.wave_plot_ui(ui, 100, wave_pos);
+                    } else {
+                        wave_plotter.wave_plot_ui(ui, 100, 0);
+                    }
                 }
-            }
+            });
         });
         egui::TopBottomPanel::bottom("console").show(ctx, |ui| {
             self.console.debug_console_ui(ui);
