@@ -48,14 +48,18 @@ impl WavePlotter {
                 Stroke::new(1.0, Color32::GREEN),
             );
 
-            let pos_in_limits = pos as f32 * (self.limits.len() as f32) / (self.wave_length as f32);
-            let pos_in_rect = pos_in_limits * rect.width() / x_max as f32 + rect.min.x;
-
+            let pos_in_rect = if !self.short_wave {
+                let pos_in_limits =
+                    pos as f32 * (self.limits.len() as f32) / (self.wave_length as f32);
+                pos_in_limits * rect.width() / x_max as f32 + rect.min.x
+            } else {
+                pos as f32 * rect.width() / x_max as f32 + rect.min.x
+            };
             ui.painter().vline(
                 pos_in_rect,
                 Rangef::new(rect.min.y, rect.max.y),
                 Stroke::new(1.0, Color32::YELLOW),
-            )
+            );
         }
         response
     }

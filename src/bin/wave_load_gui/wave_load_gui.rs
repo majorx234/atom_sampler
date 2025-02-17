@@ -150,5 +150,8 @@ impl eframe::App for WaveLoadGUI {
         egui::TopBottomPanel::bottom("console").show(ctx, |ui| {
             self.console.debug_console_ui(ui);
         });
+        if self.pad_button_is_pressed {
+            ctx.request_repaint();
+        }
     }
 }
