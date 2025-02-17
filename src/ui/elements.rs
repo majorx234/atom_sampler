@@ -11,6 +11,7 @@ pub struct WavePlotter {
     limits: Vec<(f32, f32)>,
     dpi: usize,
     wave_length: usize,
+    short_wave: bool,
 }
 
 impl WavePlotter {
@@ -23,6 +24,7 @@ impl WavePlotter {
             limits: Vec::new(),
             dpi: 100,
             wave_length: 0,
+            short_wave: true,
         }
     }
     pub fn wave_plot_ui(&self, ui: &mut egui::Ui, dpi: usize, pos: usize) -> egui::Response {
@@ -45,8 +47,10 @@ impl WavePlotter {
                 Rangef::new(y_low_in_rect, y_high_in_rect),
                 Stroke::new(1.0, Color32::GREEN),
             );
+
             let pos_in_limits = pos as f32 * (self.limits.len() as f32) / (self.wave_length as f32);
             let pos_in_rect = pos_in_limits * rect.width() / x_max as f32 + rect.min.x;
+
             ui.painter().vline(
                 pos_in_rect,
                 Rangef::new(rect.min.y, rect.max.y),
@@ -56,6 +60,7 @@ impl WavePlotter {
         response
     }
     pub fn load_wave(&mut self, wave: &[f32]) {
+        self.wave_length = wave.len();
         let segments: usize = (self.width * self.dpi as f32) as usize;
         // TODO check if segments are more than  wave length
         let mut limits: Vec<(f32, f32)> = vec![(0.0, 0.0); segments];
@@ -72,6 +77,7 @@ impl WavePlotter {
                     }
                 }
             }
+            self.short_wave = false;
         } else {
             for (idx, (limit, wave)) in limits.iter_mut().zip(wave.iter()).enumerate() {
                 if *wave < 0.0 {
@@ -82,6 +88,7 @@ impl WavePlotter {
                     limit.1 = *wave;
                 }
             }
+            self.short_wave = true
         }
         self.limits = limits;
         self.wave_loaded = true;
