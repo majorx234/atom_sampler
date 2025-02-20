@@ -20,6 +20,10 @@ path = "src/bin/atom_sampler_gui_mockup/main.rs"
 name = "wave_load_gui"
 path = "src/bin/wave_load_gui/main.rs"
 
+[[bin]]
+name = "wave_record_gui"
+path = "src/bin/wave_record_gui/main.rs"
+
 [dependencies]
 jack = { version = "0.11.4" }
 crossbeam-channel = { version = "0.5.6" }
