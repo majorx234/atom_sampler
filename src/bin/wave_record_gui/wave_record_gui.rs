@@ -32,6 +32,26 @@ impl eframe::App for WaveRecordGUI {
                 ui.heading("WaveRecordGui");
             })
         });
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
+                let mut _dropped_files = Vec::new();
+                let _ = pad_button_ui(
+                    ui,
+                    &mut self.wave_loaded,
+                    &mut _dropped_files,
+                    &mut self.pad_button_is_pressed,
+                );
+                if let Some(ref mut wave_pos) = self.wave_pos {
+                    if self.pad_button_is_pressed {
+                        *wave_pos += 1000;
+                        let max_len = self.wave_data.as_ref().unwrap().len();
+                        *wave_pos = (*wave_pos).min(max_len);
+                    } else {
+                        *wave_pos = 0;
+                    }
+                }
+            });
+        });
         egui::TopBottomPanel::bottom("console").show(ctx, |ui| {
             self.console.debug_console_ui(ui);
         });
