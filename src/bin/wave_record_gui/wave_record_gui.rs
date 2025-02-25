@@ -10,6 +10,22 @@ pub struct WaveRecordGUI {
     pub pad_button_is_pressed: bool,
 }
 
+impl WaveRecordGUI {
+    fn new() -> Self {
+        WaveRecordGUI {
+            wave_loaded: false,
+            console: DebugConsole {
+                n_items: 0,
+                msgs: Vec::new(),
+            },
+            wave_data: Some(Vec::new()),
+            wave_plotter: None,
+            wave_pos: None,
+            pad_button_is_pressed: false,
+        }
+    }
+}
+
 impl Default for WaveRecordGUI {
     fn default() -> Self {
         Self {
