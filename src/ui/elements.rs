@@ -97,8 +97,11 @@ impl WavePlotter {
         self.limits = limits;
         self.wave_loaded = true;
     }
-    pub fn append_limits(&mut self, limits_left: &[(f32, f32)]) {
-        self.limits.copy_from_slice(limits_left);
+    pub fn append_limits(&mut self, limits_slice: &[(f32, f32)]) {
+        self.limits.copy_from_slice(limits_slice);
+    }
+    pub fn extend_limits(&mut self, limits_iter: impl Iterator<Item = (f32, f32)>) {
+        self.limits.extend(limits_iter);
     }
     pub fn reset_wave(&mut self) {
         self.limits = Vec::new();

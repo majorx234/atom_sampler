@@ -9,7 +9,6 @@ use ringbuf::{traits::Split, HeapRb};
 use wave_record_gui::WaveRecordGUI;
 
 fn main() {
-    let wave_record_gui = WaveRecordGUI::default();
     let ringbuffer_left = HeapRb::<f32>::new(192000);
     let ringbuffer_right = HeapRb::<f32>::new(192000);
 
@@ -59,6 +58,10 @@ fn main() {
         ringbuffer_left_visual_in,
         ringbuffer_right_visual_in,
         rx2_atom_event,
+    );
+    let wave_record_gui = WaveRecordGUI::new(
+        Some(ringbuffer_left_visual_out),
+        Some(ringbuffer_right_visual_out),
     );
 
     let options = eframe::NativeOptions {
