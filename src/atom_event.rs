@@ -1,4 +1,4 @@
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Type {
     Recording(bool),
     ChangeStartAdress(usize),
@@ -6,7 +6,7 @@ pub enum Type {
     Playback(bool),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AtomEvent {
     pub event_type: Type,
     pub start: bool,

@@ -62,6 +62,7 @@ fn main() {
     let wave_record_gui = WaveRecordGUI::new(
         Some(ringbuffer_left_visual_out),
         Some(ringbuffer_right_visual_out),
+        Some(tx_atom_event),
     );
 
     let options = eframe::NativeOptions {

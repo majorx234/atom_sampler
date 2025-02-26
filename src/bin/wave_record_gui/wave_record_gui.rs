@@ -1,4 +1,8 @@
-use atom_sampler_lib::ui::elements::{pad_button, pad_button_ui, DebugConsole, WavePlotter};
+use atom_sampler_lib::{
+    atom_event::{AtomEvent, Type},
+    ui::elements::{pad_button, pad_button_ui, DebugConsole, WavePlotter},
+};
+use bus::Bus;
 use eframe::egui::{self, menu, Button, Context, PointerButton, ViewportCommand, Widget};
 use ringbuf::{traits::Consumer, HeapCons};
 
@@ -10,14 +14,17 @@ pub struct WaveRecordGUI {
     wave_plotter_right: Option<WavePlotter>,
     pub wave_pos: Option<usize>,
     pub pad_button_is_pressed: bool,
+    pub pad_button_was_pressed: bool,
     ringbuffer_left_visual_in_opt: Option<HeapCons<(f32, f32)>>,
     ringbuffer_right_visual_in_opt: Option<HeapCons<(f32, f32)>>,
+    tx_atom_event: Option<Bus<AtomEvent>>,
 }
 
 impl WaveRecordGUI {
     pub fn new(
         ringbuffer_left_visual_in_opt: Option<HeapCons<(f32, f32)>>,
         ringbuffer_right_visual_in_opt: Option<HeapCons<(f32, f32)>>,
+        tx_atom_event: Option<Bus<AtomEvent>>,
     ) -> Self {
         WaveRecordGUI {
             wave_loaded: false,
@@ -30,8 +37,10 @@ impl WaveRecordGUI {
             wave_plotter_right: Some(WavePlotter::new(20.0, 4.0)),
             wave_pos: None,
             pad_button_is_pressed: false,
+            pad_button_was_pressed: false,
             ringbuffer_left_visual_in_opt,
             ringbuffer_right_visual_in_opt,
+            tx_atom_event,
         }
     }
 }
@@ -49,8 +58,10 @@ impl Default for WaveRecordGUI {
             wave_plotter_right: None,
             wave_pos: None,
             pad_button_is_pressed: false,
+            pad_button_was_pressed: false,
             ringbuffer_left_visual_in_opt: None,
             ringbuffer_right_visual_in_opt: None,
+            tx_atom_event: None,
         }
     }
 }
@@ -79,16 +90,41 @@ impl eframe::App for WaveRecordGUI {
                         self.ringbuffer_left_visual_in_opt.take(),
                         self.ringbuffer_right_visual_in_opt.take(),
                     ) {
-                        if let Some(mut wave_plotter_left) = self.wave_plotter_left.take() {
-                            let wave_limits_left = ringbuffer_left_visual_in.pop_iter();
-                            wave_plotter_left.extend_limits(wave_limits_left);
+                        if let Some(ref mut wave_plotter_left) = self.wave_plotter_left {
+                            wave_plotter_left
+                                .extend_limits(&mut ringbuffer_left_visual_in.pop_iter());
+                            self.ringbuffer_left_visual_in_opt = Some(ringbuffer_left_visual_in);
                         }
-                        if let Some(mut wave_plotter_right) = self.wave_plotter_right.take() {
+                        if let Some(ref mut wave_plotter_right) = self.wave_plotter_right {
                             let wave_limits_right = ringbuffer_right_visual_in.pop_iter();
                             wave_plotter_right.extend_limits(wave_limits_right);
+                            self.ringbuffer_right_visual_in_opt = Some(ringbuffer_right_visual_in);
                         }
                     }
                 }
+                if !self.pad_button_was_pressed && self.pad_button_is_pressed {
+                    if let Some(ref mut tx_atom_event) = self.tx_atom_event {
+                        let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                            event_type: Type::Recording(true),
+                            start: true,
+                        });
+                        self.console
+                            .add_entry(format!("start recording {:?}", is_sent));
+                        println!("start recording: {:?}", is_sent);
+                    }
+                }
+                if self.pad_button_was_pressed && !self.pad_button_is_pressed {
+                    if let Some(ref mut tx_atom_event) = self.tx_atom_event {
+                        let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                            event_type: Type::Recording(false),
+                            start: false,
+                        });
+                        self.console
+                            .add_entry(format!("stop recording {:?}", is_sent));
+                        println!("stop recording: {:?}", is_sent);
+                    }
+                }
+
                 if let Some(ref mut wave_pos) = self.wave_pos {
                     if self.pad_button_is_pressed {
                         *wave_pos += 1000;
@@ -112,11 +148,15 @@ impl eframe::App for WaveRecordGUI {
                         wave_plotter_right.wave_plot_ui(ui, 100, 0);
                     }
                 }
+                self.pad_button_was_pressed = self.pad_button_is_pressed;
             });
         });
         egui::TopBottomPanel::bottom("console").show(ctx, |ui| {
             self.console.debug_console_ui(ui);
         });
+        if self.pad_button_is_pressed {
+            ctx.request_repaint();
+        }
         //    ctx.request_repaint();
     }
 }
