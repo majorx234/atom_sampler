@@ -30,12 +30,8 @@ pub fn start_jack_thread(
         // register midi ports:
         let midi_in = client.register_port("midi_in", jack::MidiIn).unwrap();
 
-        let in_a = client
-            .register_port("as_in_l", jack::AudioIn)
-            .unwrap();
-        let in_b = client
-            .register_port("as_in_r", jack::AudioIn)
-            .unwrap();
+        let in_a = client.register_port("as_in_l", jack::AudioIn).unwrap();
+        let in_b = client.register_port("as_in_r", jack::AudioIn).unwrap();
         let _midi_in = client.register_port("as_midi_in", jack::MidiIn).unwrap();
         let mut frame_size = client.buffer_size() as usize;
         if client.set_buffer_size(frame_size as u32).is_ok() {

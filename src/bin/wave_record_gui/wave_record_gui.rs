@@ -110,7 +110,6 @@ impl eframe::App for WaveRecordGUI {
                         });
                         self.console
                             .add_entry(format!("start recording {:?}", is_sent));
-                        println!("start recording: {:?}", is_sent);
                     }
                 }
                 if self.pad_button_was_pressed && !self.pad_button_is_pressed {
@@ -121,7 +120,6 @@ impl eframe::App for WaveRecordGUI {
                         });
                         self.console
                             .add_entry(format!("stop recording {:?}", is_sent));
-                        println!("stop recording: {:?}", is_sent);
                     }
                 }
 
