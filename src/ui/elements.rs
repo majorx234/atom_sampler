@@ -97,8 +97,8 @@ impl WavePlotter {
         self.limits = limits;
         self.wave_loaded = true;
     }
-    pub fn append_limits(&mut self, limits_slice: &[(f32, f32)]) {
-        self.limits.copy_from_slice(limits_slice);
+    pub fn append_limits(&mut self, limits_slice: &mut Vec<(f32, f32)>) {
+        self.limits.append(limits_slice);
     }
     pub fn extend_limits(&mut self, limits_iter: impl Iterator<Item = (f32, f32)>) {
         self.limits.extend(limits_iter);
@@ -129,12 +129,13 @@ pub fn pad_button_ui(
     }
 
     ui.input(|input| {
-        if input.pointer.button_pressed(PointerButton::Primary)
-            && response
+        if input.pointer.button_pressed(PointerButton::Primary) {
+            if response
                 .rect
                 .contains(input.pointer.press_origin().unwrap())
-        {
-            *is_pressed = true;
+            {
+                *is_pressed = true;
+            }
         } else if input.pointer.button_released(PointerButton::Primary)
             && input.pointer.interact_pos().is_some()
             && (response

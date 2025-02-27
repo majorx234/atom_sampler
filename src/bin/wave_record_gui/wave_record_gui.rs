@@ -91,13 +91,19 @@ impl eframe::App for WaveRecordGUI {
                         self.ringbuffer_right_visual_in_opt.take(),
                     ) {
                         if let Some(ref mut wave_plotter_left) = self.wave_plotter_left {
-                            wave_plotter_left
-                                .extend_limits(&mut ringbuffer_left_visual_in.pop_iter());
+                            wave_plotter_left.append_limits(
+                                &mut ringbuffer_left_visual_in
+                                    .pop_iter()
+                                    .collect::<Vec<(f32, f32)>>(),
+                            );
                             self.ringbuffer_left_visual_in_opt = Some(ringbuffer_left_visual_in);
                         }
                         if let Some(ref mut wave_plotter_right) = self.wave_plotter_right {
-                            let wave_limits_right = ringbuffer_right_visual_in.pop_iter();
-                            wave_plotter_right.extend_limits(wave_limits_right);
+                            wave_plotter_right.append_limits(
+                                &mut ringbuffer_right_visual_in
+                                    .pop_iter()
+                                    .collect::<Vec<(f32, f32)>>(),
+                            );
                             self.ringbuffer_right_visual_in_opt = Some(ringbuffer_right_visual_in);
                         }
                     }
