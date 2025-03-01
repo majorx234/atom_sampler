@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, Color32, PointerButton, Rangef, ScrollArea},
+    egui::{self, Color32, PointerButton, Pos2, Rangef, ScrollArea},
     epaint::Stroke,
 };
 
@@ -130,10 +130,12 @@ pub fn pad_button_ui(
 
     ui.input(|input| {
         if input.pointer.button_pressed(PointerButton::Primary) {
-            if response
-                .rect
-                .contains(input.pointer.press_origin().unwrap())
-            {
+            if response.rect.contains(
+                *input
+                    .pointer
+                    .press_origin()
+                    .get_or_insert(Pos2::new(-1.0, -1.0)),
+            ) {
                 *is_pressed = true;
             }
         } else if input.pointer.button_released(PointerButton::Primary)
