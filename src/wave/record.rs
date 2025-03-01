@@ -9,7 +9,6 @@ pub fn start_recording(
     mut ringbuffer_right_in: HeapCons<f32>,
     mut ringbuffer_left_visual_in_opt: Option<HeapProd<(f32, f32)>>,
     mut ringbuffer_right_visual_in_opt: Option<HeapProd<(f32, f32)>>,
-
     mut rx_stop_rec: BusReader<bool>,
 ) -> std::thread::JoinHandle<(Vec<f32>, Vec<f32>)> {
     std::thread::spawn(move || {
@@ -19,6 +18,8 @@ pub fn start_recording(
         let mut wave_right = vec![0.0; wave_size];
         let mut vecpointer_left = 0;
         let mut vecpointer_right = 0;
+        println!("start_recording: start rec");
+
         while run {
             let length_left = 1024.min(ringbuffer_left_in.occupied_len());
             let length_right = 1024.min(ringbuffer_right_in.occupied_len());
@@ -62,13 +63,20 @@ pub fn start_recording(
                 ringbuffer_left_in.clear();
                 ringbuffer_right_in.clear();
                 run = false;
+                println!("start_recording: wave is full");
             }
+
             if let Ok(is_stop) = rx_stop_rec.try_recv() {
                 if is_stop {
                     run = false;
+                    println!("start_recording: stop rec received");
                 }
             }
         }
+        println!(
+            "start_recording: finished: {} {}",
+            vecpointer_left, vecpointer_right
+        );
         (wave_left, wave_right)
     })
 }

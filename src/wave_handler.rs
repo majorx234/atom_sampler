@@ -79,7 +79,8 @@ impl WaveHandler {
 
     pub fn stop_recording(&mut self) {
         if let Some(ref mut tx_stop_rec) = self.tx_stop_rec_bus {
-            let _ = tx_stop_rec.try_broadcast(false);
+            println!("wave_handler: tx stop rec");
+            let _ = tx_stop_rec.try_broadcast(true);
         }
     }
 
