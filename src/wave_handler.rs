@@ -78,7 +78,7 @@ impl WaveHandler {
     }
 
     pub fn stop_recording(&mut self) {
-        if let Some(mut tx_stop_rec) = self.tx_stop_rec_bus.take() {
+        if let Some(ref mut tx_stop_rec) = self.tx_stop_rec_bus {
             let _ = tx_stop_rec.try_broadcast(false);
         }
     }
@@ -122,7 +122,7 @@ impl WaveHandler {
         }
     }
     pub fn stop_playback(&mut self) {
-        if let Some(mut tx_stop_play) = self.tx_stop_play_bus.take() {
+        if let Some(ref mut tx_stop_play) = self.tx_stop_play_bus {
             let _ = tx_stop_play.try_broadcast(false);
         }
     }
