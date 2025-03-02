@@ -110,6 +110,12 @@ impl eframe::App for WaveRecordGUI {
                 }
                 if !self.pad_button_was_pressed && self.pad_button_is_pressed {
                     if let Some(ref mut tx_atom_event) = self.tx_atom_event {
+                        if let Some(ref mut wav_plotter) = self.wave_plotter_left {
+                            wav_plotter.reset_wave();
+                        }
+                        if let Some(ref mut wav_plotter) = self.wave_plotter_right {
+                            wav_plotter.reset_wave();
+                        }
                         let is_sent = tx_atom_event.try_broadcast(AtomEvent {
                             event_type: Type::Recording(true),
                             start: true,
