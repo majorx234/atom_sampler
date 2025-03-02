@@ -11,7 +11,14 @@ pub fn start_recording(
     mut ringbuffer_left_visual_in_opt: Option<HeapProd<(f32, f32)>>,
     mut ringbuffer_right_visual_in_opt: Option<HeapProd<(f32, f32)>>,
     mut rx_stop_rec: BusReader<bool>,
-) -> std::thread::JoinHandle<(Vec<f32>, Vec<f32>)> {
+) -> std::thread::JoinHandle<(
+    Vec<f32>,
+    Vec<f32>,
+    HeapCons<f32>,
+    HeapCons<f32>,
+    Option<HeapProd<(f32, f32)>>,
+    Option<HeapProd<(f32, f32)>>,
+)> {
     std::thread::spawn(move || {
         let mut run: bool = true;
         let wave_size = 192000;
@@ -25,6 +32,7 @@ pub fn start_recording(
             let length_left = 1024.min(ringbuffer_left_in.occupied_len());
             let length_right = 1024.min(ringbuffer_right_in.occupied_len());
             if length_left == 0 && length_right == 0 {
+                // TODO duration need to be dependen on sampling rate 48000/1024
                 thread::sleep(time::Duration::from_millis(10));
             } else {
                 if (vecpointer_left + length_left < wave_size)
@@ -84,6 +92,13 @@ pub fn start_recording(
             "start_recording: finished: {} {}",
             vecpointer_left, vecpointer_right
         );
-        (wave_left, wave_right)
+        (
+            wave_left,
+            wave_right,
+            ringbuffer_left_in,
+            ringbuffer_right_in,
+            ringbuffer_left_visual_in_opt,
+            ringbuffer_right_visual_in_opt,
+        )
     })
 }

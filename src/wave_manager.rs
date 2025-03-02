@@ -70,7 +70,13 @@ pub fn start_wave_manager(
             }
 
             if wave_handler.state_recording {
-                wave_handler.get_recording();
+                let ringbufs_opt = wave_handler.get_recording();
+                if let Some(ringbufs) = ringbufs_opt {
+                    ringbuffer_left_in_opt = Some(ringbufs.0);
+                    ringbuffer_right_in_opt = Some(ringbufs.1);
+                    ringbuffer_left_visual_out_opt = ringbufs.2;
+                    ringbuffer_right_visual_out_opt = ringbufs.3;
+                }
             }
             if wave_handler.state_playback {
                 wave_handler.get_playback_finished();

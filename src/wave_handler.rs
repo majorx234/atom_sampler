@@ -16,7 +16,16 @@ pub struct WaveHandler {
     pub state_playback: bool,
     pub path: Option<PathBuf>,
     pub rx_command: Option<Receiver<WaveCommands>>,
-    pub rec_processing: Option<thread::JoinHandle<(Vec<f32>, Vec<f32>)>>,
+    pub rec_processing: Option<
+        thread::JoinHandle<(
+            Vec<f32>,
+            Vec<f32>,
+            HeapCons<f32>,
+            HeapCons<f32>,
+            Option<HeapProd<(f32, f32)>>,
+            Option<HeapProd<(f32, f32)>>,
+        )>,
+    >,
     pub play_processing: Option<thread::JoinHandle<()>>,
     pub tx_stop_rec_bus: Option<Bus<bool>>,
     pub tx_stop_play_bus: Option<Bus<bool>>,
@@ -84,20 +93,42 @@ impl WaveHandler {
         }
     }
 
-    pub fn get_recording(&mut self) {
+    pub fn get_recording(
+        &mut self,
+    ) -> Option<(
+        HeapCons<f32>,
+        HeapCons<f32>,
+        Option<HeapProd<(f32, f32)>>,
+        Option<HeapProd<(f32, f32)>>,
+    )> {
         if let Some(recording_join_handle) = self.rec_processing.take() {
             if recording_join_handle.is_finished() {
-                if let Ok((left_data, right_data)) = recording_join_handle.join() {
+                self.state_recording = false;
+                if let Ok((
+                    left_data,
+                    right_data,
+                    ringbuffer_left_in,
+                    ringbuffer_right_in,
+                    ringbuffer_left_visual_in_opt,
+                    ringbuffer_right_visual_in_opt,
+                )) = recording_join_handle.join()
+                {
                     // create sample
                     let mut recording = Sample::new();
                     let _ = recording.load_from_data(left_data, right_data);
                     self.sample = Some(recording);
+                    return Some((
+                        ringbuffer_left_in,
+                        ringbuffer_right_in,
+                        ringbuffer_left_visual_in_opt,
+                        ringbuffer_right_visual_in_opt,
+                    ));
                 }
-                self.state_recording = false;
             } else {
                 self.rec_processing = Some(recording_join_handle);
             }
         }
+        None
     }
 
     pub fn start_playback(
