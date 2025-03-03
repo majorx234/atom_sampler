@@ -1,6 +1,8 @@
 use atom_sampler_lib::{
     atom_event::{AtomEvent, Type},
-    ui::elements::{pad_button, pad_button_ui, DebugConsole, WavePlotter},
+    ui::elements::{
+        pad_button, pad_button_ui, status_button, status_button_ui, DebugConsole, WavePlotter,
+    },
 };
 use bus::Bus;
 use eframe::egui::{self, menu, Button, Context, PointerButton, ViewportCommand, Widget};
@@ -8,6 +10,7 @@ use ringbuf::{traits::Consumer, HeapCons};
 
 pub struct WaveRecordGUI {
     wave_loaded: bool,
+    record_mode: bool,
     pub console: DebugConsole,
     wave_data: Option<Vec<f32>>,
     wave_plotter_left: Option<WavePlotter>,
@@ -28,6 +31,7 @@ impl WaveRecordGUI {
     ) -> Self {
         WaveRecordGUI {
             wave_loaded: false,
+            record_mode: false,
             console: DebugConsole {
                 n_items: 0,
                 msgs: Vec::new(),
@@ -49,6 +53,7 @@ impl Default for WaveRecordGUI {
     fn default() -> Self {
         Self {
             wave_loaded: false,
+            record_mode: false,
             console: DebugConsole {
                 n_items: 0,
                 msgs: Vec::new(),
@@ -160,6 +165,7 @@ impl eframe::App for WaveRecordGUI {
                 }
                 self.pad_button_was_pressed = self.pad_button_is_pressed;
             });
+            let _ = status_button_ui(ui, &mut self.record_mode);
         });
         egui::TopBottomPanel::bottom("console").show(ctx, |ui| {
             self.console.debug_console_ui(ui);
