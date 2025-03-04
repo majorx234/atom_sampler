@@ -11,7 +11,7 @@ pub fn start_playback(
     mut ringbuffer_right_out: HeapProd<f32>,
     mut rx_stop_play: BusReader<bool>,
     sample: Sample,
-) -> std::thread::JoinHandle<(HeapProd<f32>, HeapProd<f32>)> {
+) -> std::thread::JoinHandle<(HeapProd<f32>, HeapProd<f32>, Sample)> {
     std::thread::spawn(move || {
         // TODO: playback from buffer
         let mut vecpointer_left = 0;
@@ -44,6 +44,6 @@ pub fn start_playback(
                 thread::sleep(Duration::from_millis(sleep_time_ms as u64));
             }
         }
-        (ringbuffer_left_out, ringbuffer_right_out)
+        (ringbuffer_left_out, ringbuffer_right_out, sample)
     })
 }

@@ -26,7 +26,7 @@ pub struct WaveHandler {
             Option<HeapProd<(f32, f32)>>,
         )>,
     >,
-    pub play_processing: Option<thread::JoinHandle<(HeapProd<f32>, HeapProd<f32>)>>,
+    pub play_processing: Option<thread::JoinHandle<(HeapProd<f32>, HeapProd<f32>, Sample)>>,
     pub tx_stop_rec_bus: Option<Bus<bool>>,
     pub tx_stop_play_bus: Option<Bus<bool>>,
 }
@@ -88,7 +88,6 @@ impl WaveHandler {
 
     pub fn stop_recording(&mut self) {
         if let Some(ref mut tx_stop_rec) = self.tx_stop_rec_bus {
-            println!("wave_handler: tx stop rec");
             let _ = tx_stop_rec.try_broadcast(true);
         }
     }
@@ -163,8 +162,10 @@ impl WaveHandler {
         if let Some(playback_join_handle) = self.play_processing.take() {
             if playback_join_handle.is_finished() {
                 self.state_playback = false;
-                if let Ok((ringbuffer_left_out, ringbuffer_right_out)) = playback_join_handle.join()
+                if let Ok((ringbuffer_left_out, ringbuffer_right_out, sample)) =
+                    playback_join_handle.join()
                 {
+                    self.sample = Some(sample);
                     return Some((ringbuffer_left_out, ringbuffer_right_out));
                 }
             } else {

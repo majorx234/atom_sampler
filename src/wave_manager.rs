@@ -37,7 +37,6 @@ pub fn start_wave_manager(
                 match atom_event.event_type {
                     Type::Recording(state) => {
                         if state {
-                            println!("wave_manager: start rec");
                             wave_handler.start_recording(
                                 &mut ringbuffer_left_in_opt.take(),
                                 &mut ringbuffer_right_in_opt.take(),
@@ -45,7 +44,6 @@ pub fn start_wave_manager(
                                 &mut ringbuffer_right_visual_out_opt.take(),
                             );
                         } else {
-                            println!("wave_manager: stop rec");
                             wave_handler.stop_recording();
                         }
                     }
@@ -79,11 +77,17 @@ pub fn start_wave_manager(
                 }
             }
             if wave_handler.state_playback {
-                let ringbufs = wave_handler.get_playback_finished();
+                let ringbufs_opt = wave_handler.get_playback_finished();
+                if let Some(ringbufs) = ringbufs_opt {
+                    ringbuffer_left_out_opt = Some(ringbufs.0);
+                    ringbuffer_right_out_opt = Some(ringbufs.1);
+                }
             }
             match rx_close.try_recv() {
                 Ok(running) => run = running,
-                Err(_) => {}
+                Err(err) => {
+                    println!("close err: {:?}", err);
+                }
             }
         }
     })

@@ -77,14 +77,12 @@ pub fn start_recording(
                     ringbuffer_left_in.clear();
                     ringbuffer_right_in.clear();
                     run = false;
-                    println!("start_recording: wave is full");
                 }
             }
 
             if let Ok(is_stop) = rx_stop_rec.try_recv() {
                 if is_stop {
                     run = false;
-                    println!("start_recording: stop rec received");
                 }
             }
         }
