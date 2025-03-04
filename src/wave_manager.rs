@@ -79,7 +79,7 @@ pub fn start_wave_manager(
                 }
             }
             if wave_handler.state_playback {
-                wave_handler.get_playback_finished();
+                let ringbufs = wave_handler.get_playback_finished();
             }
             match rx_close.try_recv() {
                 Ok(running) => run = running,

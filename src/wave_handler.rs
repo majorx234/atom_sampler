@@ -26,7 +26,7 @@ pub struct WaveHandler {
             Option<HeapProd<(f32, f32)>>,
         )>,
     >,
-    pub play_processing: Option<thread::JoinHandle<()>>,
+    pub play_processing: Option<thread::JoinHandle<(HeapProd<f32>, HeapProd<f32>)>>,
     pub tx_stop_rec_bus: Option<Bus<bool>>,
     pub tx_stop_play_bus: Option<Bus<bool>>,
 }
@@ -158,15 +158,20 @@ impl WaveHandler {
             let _ = tx_stop_play.try_broadcast(false);
         }
     }
-    pub fn get_playback_finished(&mut self) {
+    pub fn get_playback_finished(&mut self) -> Option<(HeapProd<f32>, HeapProd<f32>)> {
         // TODO: restart playback with message
         if let Some(playback_join_handle) = self.play_processing.take() {
             if playback_join_handle.is_finished() {
                 self.state_playback = false;
+                if let Ok((ringbuffer_left_out, ringbuffer_right_out)) = playback_join_handle.join()
+                {
+                    return Some((ringbuffer_left_out, ringbuffer_right_out));
+                }
             } else {
                 self.play_processing = Some(playback_join_handle);
             }
         }
+        None
     }
     pub fn change_start_address(&mut self, address: usize) {
         self.start_address = address;
