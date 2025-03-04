@@ -155,7 +155,7 @@ impl WaveHandler {
     }
     pub fn stop_playback(&mut self) {
         if let Some(ref mut tx_stop_play) = self.tx_stop_play_bus {
-            let _ = tx_stop_play.try_broadcast(false);
+            let _ = tx_stop_play.try_broadcast(true);
         }
     }
     pub fn get_playback_finished(&mut self) -> Option<(HeapProd<f32>, HeapProd<f32>)> {
