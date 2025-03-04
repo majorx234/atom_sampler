@@ -88,55 +88,86 @@ impl eframe::App for WaveRecordGUI {
                 );
                 // recording:
                 if self.pad_button_is_pressed {
-                    if let (
-                        Some(mut ringbuffer_left_visual_in),
-                        Some(mut ringbuffer_right_visual_in),
-                    ) = (
-                        self.ringbuffer_left_visual_in_opt.take(),
-                        self.ringbuffer_right_visual_in_opt.take(),
-                    ) {
-                        if let Some(ref mut wave_plotter_left) = self.wave_plotter_left {
-                            wave_plotter_left.append_limits(
-                                &mut ringbuffer_left_visual_in
-                                    .pop_iter()
-                                    .collect::<Vec<(f32, f32)>>(),
-                            );
-                            self.ringbuffer_left_visual_in_opt = Some(ringbuffer_left_visual_in);
+                    if self.record_mode {
+                        if let (
+                            Some(mut ringbuffer_left_visual_in),
+                            Some(mut ringbuffer_right_visual_in),
+                        ) = (
+                            self.ringbuffer_left_visual_in_opt.take(),
+                            self.ringbuffer_right_visual_in_opt.take(),
+                        ) {
+                            if let Some(ref mut wave_plotter_left) = self.wave_plotter_left {
+                                wave_plotter_left.append_limits(
+                                    &mut ringbuffer_left_visual_in
+                                        .pop_iter()
+                                        .collect::<Vec<(f32, f32)>>(),
+                                );
+                                self.ringbuffer_left_visual_in_opt =
+                                    Some(ringbuffer_left_visual_in);
+                            }
+                            if let Some(ref mut wave_plotter_right) = self.wave_plotter_right {
+                                wave_plotter_right.append_limits(
+                                    &mut ringbuffer_right_visual_in
+                                        .pop_iter()
+                                        .collect::<Vec<(f32, f32)>>(),
+                                );
+                                self.ringbuffer_right_visual_in_opt =
+                                    Some(ringbuffer_right_visual_in);
+                            }
                         }
-                        if let Some(ref mut wave_plotter_right) = self.wave_plotter_right {
-                            wave_plotter_right.append_limits(
-                                &mut ringbuffer_right_visual_in
-                                    .pop_iter()
-                                    .collect::<Vec<(f32, f32)>>(),
-                            );
-                            self.ringbuffer_right_visual_in_opt = Some(ringbuffer_right_visual_in);
-                        }
+                    } else {
+                        // playback mode
                     }
                 }
                 if !self.pad_button_was_pressed && self.pad_button_is_pressed {
-                    if let Some(ref mut tx_atom_event) = self.tx_atom_event {
-                        if let Some(ref mut wav_plotter) = self.wave_plotter_left {
-                            wav_plotter.reset_wave();
+                    if self.record_mode {
+                        if let Some(ref mut tx_atom_event) = self.tx_atom_event {
+                            if let Some(ref mut wav_plotter) = self.wave_plotter_left {
+                                wav_plotter.reset_wave();
+                            }
+                            if let Some(ref mut wav_plotter) = self.wave_plotter_right {
+                                wav_plotter.reset_wave();
+                            }
+                            let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                event_type: Type::Recording(true),
+                                start: true,
+                            });
+                            self.console
+                                .add_entry(format!("start recording {:?}", is_sent));
                         }
-                        if let Some(ref mut wav_plotter) = self.wave_plotter_right {
-                            wav_plotter.reset_wave();
+                    } else {
+                        // playback mode
+                        if let Some(ref mut tx_atom_event) = self.tx_atom_event {
+                            let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                event_type: Type::Playback(true),
+                                start: true,
+                            });
+
+                            self.console
+                                .add_entry(format!("start playback {:?}", is_sent));
                         }
-                        let is_sent = tx_atom_event.try_broadcast(AtomEvent {
-                            event_type: Type::Recording(true),
-                            start: true,
-                        });
-                        self.console
-                            .add_entry(format!("start recording {:?}", is_sent));
                     }
                 }
                 if self.pad_button_was_pressed && !self.pad_button_is_pressed {
-                    if let Some(ref mut tx_atom_event) = self.tx_atom_event {
-                        let is_sent = tx_atom_event.try_broadcast(AtomEvent {
-                            event_type: Type::Recording(false),
-                            start: false,
-                        });
-                        self.console
-                            .add_entry(format!("stop recording {:?}", is_sent));
+                    if self.record_mode {
+                        if let Some(ref mut tx_atom_event) = self.tx_atom_event {
+                            let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                event_type: Type::Recording(false),
+                                start: false,
+                            });
+                            self.console
+                                .add_entry(format!("stop recording {:?}", is_sent));
+                        }
+                    } else {
+                        // playback mode
+                        if let Some(ref mut tx_atom_event) = self.tx_atom_event {
+                            let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                event_type: Type::Playback(false),
+                                start: false,
+                            });
+                            self.console
+                                .add_entry(format!("stop recording {:?}", is_sent));
+                        }
                     }
                 }
 
