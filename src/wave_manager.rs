@@ -4,25 +4,33 @@ use crate::{
     jackprocess::JackRingBuffer,
 };
 use bus::BusReader;
-use ringbuf::{HeapCons, HeapProd};
+use ringbuf::{traits::Split, HeapCons, HeapRb};
 use std::{thread, time::Duration};
 
 pub fn start_wave_manager(
     mut rx_close: BusReader<bool>,
     jack_ringbuffer: JackRingBuffer,
-    ringbuffer_left_visual_out: HeapProd<(f32, f32)>,
-    ringbuffer_right_visual_out: HeapProd<(f32, f32)>,
     mut rx_atom_event: BusReader<AtomEvent>,
-) -> std::thread::JoinHandle<()> {
-    std::thread::spawn(move || {
+) -> (
+    HeapCons<(f32, f32)>,
+    HeapCons<(f32, f32)>,
+    std::thread::JoinHandle<()>,
+) {
+    let ringbuffer_left_visual = HeapRb::<(f32, f32)>::new(375);
+    let ringbuffer_right_visual = HeapRb::<(f32, f32)>::new(375);
+
+    let (ringbuffer_left_visual_in, ringbuffer_left_visual_out) = ringbuffer_left_visual.split();
+    let (ringbuffer_right_visual_in, ringbuffer_right_visual_out) = ringbuffer_right_visual.split();
+
+    let wave_manger_join_handle = std::thread::spawn(move || {
         let mut run: bool = true;
         let mut wave_handler = WaveHandler::new(None);
         let mut ringbuffer_left_in_opt = Some(jack_ringbuffer.ringbuffer_left_rec_out);
         let mut ringbuffer_right_in_opt = Some(jack_ringbuffer.ringbuffer_right_rec_out);
         let mut ringbuffer_left_out_opt = Some(jack_ringbuffer.ringbuffer_left_play_in);
         let mut ringbuffer_right_out_opt = Some(jack_ringbuffer.ringbuffer_right_play_in);
-        let mut ringbuffer_left_visual_out_opt = Some(ringbuffer_left_visual_out);
-        let mut ringbuffer_right_visual_out_opt = Some(ringbuffer_right_visual_out);
+        let mut ringbuffer_left_visual_out_opt = Some(ringbuffer_left_visual_in);
+        let mut ringbuffer_right_visual_out_opt = Some(ringbuffer_right_visual_in);
 
         while run {
             let opt_atom_event: Option<AtomEvent> = if let Ok(rx_atome_event) =
@@ -89,5 +97,10 @@ pub fn start_wave_manager(
                 }
             }
         }
-    })
+    });
+    (
+        ringbuffer_left_visual_out,
+        ringbuffer_right_visual_out,
+        wave_manger_join_handle,
+    )
 }
