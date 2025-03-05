@@ -1,16 +1,15 @@
-use crate::atom_event::AtomEvent;
-use crate::atom_event::Type;
 use crate::wave_handler::WaveHandler;
+use crate::{
+    atom_event::{AtomEvent, Type},
+    jackprocess::JackRingBuffer,
+};
 use bus::BusReader;
 use ringbuf::{HeapCons, HeapProd};
 use std::{thread, time::Duration};
 
 pub fn start_wave_manager(
     mut rx_close: BusReader<bool>,
-    ringbuffer_left_in: HeapCons<f32>,
-    ringbuffer_right_in: HeapCons<f32>,
-    ringbuffer_left_out: HeapProd<f32>,
-    ringbuffer_right_out: HeapProd<f32>,
+    jack_ringbuffer: JackRingBuffer,
     ringbuffer_left_visual_out: HeapProd<(f32, f32)>,
     ringbuffer_right_visual_out: HeapProd<(f32, f32)>,
     mut rx_atom_event: BusReader<AtomEvent>,
@@ -18,10 +17,10 @@ pub fn start_wave_manager(
     std::thread::spawn(move || {
         let mut run: bool = true;
         let mut wave_handler = WaveHandler::new(None);
-        let mut ringbuffer_left_in_opt = Some(ringbuffer_left_in);
-        let mut ringbuffer_right_in_opt = Some(ringbuffer_right_in);
-        let mut ringbuffer_left_out_opt = Some(ringbuffer_left_out);
-        let mut ringbuffer_right_out_opt = Some(ringbuffer_right_out);
+        let mut ringbuffer_left_in_opt = Some(jack_ringbuffer.ringbuffer_left_rec_out);
+        let mut ringbuffer_right_in_opt = Some(jack_ringbuffer.ringbuffer_right_rec_out);
+        let mut ringbuffer_left_out_opt = Some(jack_ringbuffer.ringbuffer_left_play_in);
+        let mut ringbuffer_right_out_opt = Some(jack_ringbuffer.ringbuffer_right_play_in);
         let mut ringbuffer_left_visual_out_opt = Some(ringbuffer_left_visual_out);
         let mut ringbuffer_right_visual_out_opt = Some(ringbuffer_right_visual_out);
 

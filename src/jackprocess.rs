@@ -4,21 +4,36 @@ use crate::jackmidi::MidiMsgGeneric;
 use bus::{Bus, BusReader};
 use jack;
 use ringbuf::{
-    traits::{Consumer, Producer},
-    HeapCons, HeapProd,
+    traits::{Consumer, Producer, Split},
+    HeapCons, HeapProd, HeapRb,
 };
 use std::{process::exit, thread, time::Duration};
 
+pub struct JackRingBuffer {
+    pub ringbuffer_left_rec_out: HeapCons<f32>,
+    pub ringbuffer_right_rec_out: HeapCons<f32>,
+    pub ringbuffer_left_play_in: HeapProd<f32>,
+    pub ringbuffer_right_play_in: HeapProd<f32>,
+}
+
 pub fn start_jack_thread(
     mut rx_close: BusReader<bool>,
-    mut ringbuffer_left_in: HeapProd<f32>,
-    mut ringbuffer_right_in: HeapProd<f32>,
-    mut ringbuffer_left_out: HeapCons<f32>,
-    mut ringbuffer_right_out: HeapCons<f32>,
     mut midi_sender: Bus<MidiMsgGeneric>,
     mut rx_atom_event: BusReader<AtomEvent>,
-) -> std::thread::JoinHandle<()> {
-    std::thread::spawn(move || {
+) -> (JackRingBuffer, thread::JoinHandle<()>) {
+    let ringbuffer_left = HeapRb::<f32>::new(192000);
+    let ringbuffer_right = HeapRb::<f32>::new(192000);
+
+    let ringbuffer_left_play = HeapRb::<f32>::new(192000);
+    let ringbuffer_right_play = HeapRb::<f32>::new(192000);
+
+    let (mut ringbuffer_left_in, ringbuffer_left_out) = ringbuffer_left.split();
+    let (mut ringbuffer_right_in, ringbuffer_right_out) = ringbuffer_right.split();
+
+    let (ringbuffer_left_play_in, mut ringbuffer_left_play_out) = ringbuffer_left_play.split();
+    let (ringbuffer_right_play_in, mut ringbuffer_right_play_out) = ringbuffer_right_play.split();
+
+    let jack_join_handle = std::thread::spawn(move || {
         let mut run: bool = true;
         let (client, _status) =
             jack::Client::new("atom sampler", jack::ClientOptions::NO_START_SERVER)
@@ -104,8 +119,8 @@ pub fn start_jack_thread(
                 ringbuffer_right_in.push_iter(&mut in_b_p.iter().copied());
             }
             if state_playback {
-                ringbuffer_left_out.pop_slice(out_a_p);
-                ringbuffer_right_out.pop_slice(out_b_p);
+                ringbuffer_left_play_out.pop_slice(out_a_p);
+                ringbuffer_right_play_out.pop_slice(out_b_p);
             }
 
             jack::Control::Continue
@@ -123,5 +138,14 @@ pub fn start_jack_thread(
             Ok(_) => println!("exit jackaudio thread\n"),
             Err(_) => println!("exit jackaudio thread,client deactivation err\n"),
         }
-    })
+    });
+    (
+        JackRingBuffer {
+            ringbuffer_left_rec_out: ringbuffer_left_out,
+            ringbuffer_right_rec_out: ringbuffer_right_out,
+            ringbuffer_right_play_in: ringbuffer_left_play_in,
+            ringbuffer_left_play_in: ringbuffer_right_play_in,
+        },
+        jack_join_handle,
+    )
 }
