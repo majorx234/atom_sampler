@@ -31,6 +31,8 @@ fn main() {
         Some(ringbuffer_left_visual_out),
         Some(ringbuffer_right_visual_out),
         Some(tx_atom_event),
+        Some(jack_join_handle),
+        Some(wave_manager_join_handle),
     );
 
     let options = eframe::NativeOptions {

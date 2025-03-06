@@ -7,6 +7,7 @@ use atom_sampler_lib::{
 use bus::Bus;
 use eframe::egui::{self, menu, Button, Context, PointerButton, ViewportCommand, Widget};
 use ringbuf::{traits::Consumer, HeapCons};
+use std::thread::JoinHandle;
 
 pub struct WaveRecordGUI {
     wave_loaded: bool,
@@ -21,6 +22,8 @@ pub struct WaveRecordGUI {
     ringbuffer_left_visual_in_opt: Option<HeapCons<(f32, f32)>>,
     ringbuffer_right_visual_in_opt: Option<HeapCons<(f32, f32)>>,
     tx_atom_event: Option<Bus<AtomEvent>>,
+    jack_join_handle: Option<JoinHandle<()>>,
+    wave_manager_join_handle: Option<JoinHandle<()>>,
 }
 
 impl WaveRecordGUI {
@@ -28,6 +31,8 @@ impl WaveRecordGUI {
         ringbuffer_left_visual_in_opt: Option<HeapCons<(f32, f32)>>,
         ringbuffer_right_visual_in_opt: Option<HeapCons<(f32, f32)>>,
         tx_atom_event: Option<Bus<AtomEvent>>,
+        jack_join_handle: Option<JoinHandle<()>>,
+        wave_manager_join_handle: Option<JoinHandle<()>>,
     ) -> Self {
         WaveRecordGUI {
             wave_loaded: false,
@@ -45,6 +50,8 @@ impl WaveRecordGUI {
             ringbuffer_left_visual_in_opt,
             ringbuffer_right_visual_in_opt,
             tx_atom_event,
+            jack_join_handle,
+            wave_manager_join_handle,
         }
     }
 }
@@ -67,6 +74,8 @@ impl Default for WaveRecordGUI {
             ringbuffer_left_visual_in_opt: None,
             ringbuffer_right_visual_in_opt: None,
             tx_atom_event: None,
+            jack_join_handle: None,
+            wave_manager_join_handle: None,
         }
     }
 }
