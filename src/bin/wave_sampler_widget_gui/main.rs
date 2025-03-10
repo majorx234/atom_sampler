@@ -7,7 +7,6 @@ use atom_sampler_lib::{
     wave_manager::start_wave_manager,
 };
 use bus::Bus;
-use ringbuf::{traits::Split, HeapRb};
 use wave_sampler_widget_gui::WaveSamplerWidgetGUI;
 
 fn main() {
@@ -30,6 +29,7 @@ fn main() {
     let wave_sampler_widget_gui = WaveSamplerWidgetGUI::new(
         Some(ringbuffer_left_visual_out),
         Some(ringbuffer_right_visual_out),
+        Some(tx_close),
         Some(tx_atom_event),
         Some(jack_join_handle),
         Some(wave_manager_join_handle),

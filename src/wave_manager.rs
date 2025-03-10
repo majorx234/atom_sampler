@@ -5,7 +5,7 @@ use crate::{
 };
 use bus::BusReader;
 use ringbuf::{traits::Split, HeapCons, HeapRb};
-use std::{thread, time::Duration};
+use std::{sync::mpsc::TryRecvError::Empty, thread, time::Duration};
 
 pub fn start_wave_manager(
     mut rx_close: BusReader<bool>,
@@ -91,10 +91,14 @@ pub fn start_wave_manager(
                 }
             }
             match rx_close.try_recv() {
-                Ok(running) => run = running,
-                Err(err) => {
-                    println!("close err: {:?}", err);
+                Ok(running) => {
+                    run = running;
+                    println!("wave_manager closed");
                 }
+                Err(err) => match err {
+                    Empty => {}
+                    _ => println!("close err: {:?}", err),
+                },
             }
         }
     });

@@ -21,6 +21,7 @@ pub struct WaveSamplerWidgetGUI {
     pub pad_button_was_pressed: bool,
     ringbuffer_left_visual_in_opt: Option<HeapCons<(f32, f32)>>,
     ringbuffer_right_visual_in_opt: Option<HeapCons<(f32, f32)>>,
+    tx_close_event: Option<Bus<bool>>,
     tx_atom_event: Option<Bus<AtomEvent>>,
     jack_join_handle: Option<JoinHandle<()>>,
     wave_manager_join_handle: Option<JoinHandle<()>>,
@@ -30,6 +31,7 @@ impl WaveSamplerWidgetGUI {
     pub fn new(
         ringbuffer_left_visual_in_opt: Option<HeapCons<(f32, f32)>>,
         ringbuffer_right_visual_in_opt: Option<HeapCons<(f32, f32)>>,
+        tx_close_event: Option<Bus<bool>>,
         tx_atom_event: Option<Bus<AtomEvent>>,
         jack_join_handle: Option<JoinHandle<()>>,
         wave_manager_join_handle: Option<JoinHandle<()>>,
@@ -49,6 +51,7 @@ impl WaveSamplerWidgetGUI {
             pad_button_was_pressed: false,
             ringbuffer_left_visual_in_opt,
             ringbuffer_right_visual_in_opt,
+            tx_close_event,
             tx_atom_event,
             jack_join_handle,
             wave_manager_join_handle,
@@ -73,13 +76,28 @@ impl Default for WaveSamplerWidgetGUI {
             pad_button_was_pressed: false,
             ringbuffer_left_visual_in_opt: None,
             ringbuffer_right_visual_in_opt: None,
+            tx_close_event: None,
             tx_atom_event: None,
             jack_join_handle: None,
             wave_manager_join_handle: None,
         }
     }
 }
+
 impl eframe::App for WaveSamplerWidgetGUI {
+    fn on_exit(&mut self, _ctx: Option<&eframe::glow::Context>) {
+        println!("close WaveSamplerWidgetGUI");
+        self.tx_close_event
+            .as_mut()
+            .and_then(|tx| tx.try_broadcast(false).ok());
+        if let Some(jack_join_handle) = self.jack_join_handle.take() {
+            let _ = jack_join_handle.join();
+        }
+        if let Some(wave_manager_join_handle) = self.wave_manager_join_handle.take() {
+            let _ = wave_manager_join_handle.join();
+        }
+    }
+
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("control").show(ctx, |ui| {
             ui.vertical(|ui| {
