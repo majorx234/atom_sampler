@@ -8,6 +8,7 @@ pub enum Type {
 
 #[derive(Clone, Debug)]
 pub struct AtomEvent {
+    pub channel: usize,
     pub event_type: Type,
     pub start: bool,
 }

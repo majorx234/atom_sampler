@@ -140,6 +140,7 @@ impl eframe::App for WaveRecordGUI {
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
                                 event_type: Type::Recording(true),
                                 start: true,
+                                channel: 0,
                             });
                             self.console
                                 .add_entry(format!("start recording {:?}", is_sent));
@@ -150,6 +151,7 @@ impl eframe::App for WaveRecordGUI {
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
                                 event_type: Type::Playback(true),
                                 start: true,
+                                channel: 0,
                             });
 
                             self.console
@@ -163,6 +165,7 @@ impl eframe::App for WaveRecordGUI {
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
                                 event_type: Type::Recording(false),
                                 start: false,
+                                channel: 0,
                             });
                             self.console
                                 .add_entry(format!("stop recording {:?}", is_sent));
@@ -173,6 +176,7 @@ impl eframe::App for WaveRecordGUI {
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
                                 event_type: Type::Playback(false),
                                 start: false,
+                                channel: 0,
                             });
                             self.console
                                 .add_entry(format!("stop recording {:?}", is_sent));
