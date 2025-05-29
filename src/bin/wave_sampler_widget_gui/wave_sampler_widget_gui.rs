@@ -156,6 +156,7 @@ impl eframe::App for WaveSamplerWidgetGUI {
                                 wav_plotter.reset_wave();
                             }
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                channel: 0, // TODO check if also sending channel 1
                                 event_type: Type::Recording(true),
                                 start: true,
                             });
@@ -166,6 +167,7 @@ impl eframe::App for WaveSamplerWidgetGUI {
                         // playback mode
                         if let Some(ref mut tx_atom_event) = self.tx_atom_event {
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                channel: 0,
                                 event_type: Type::Playback(true),
                                 start: true,
                             });
@@ -179,6 +181,7 @@ impl eframe::App for WaveSamplerWidgetGUI {
                     if self.record_mode {
                         if let Some(ref mut tx_atom_event) = self.tx_atom_event {
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                channel: 0,
                                 event_type: Type::Recording(false),
                                 start: false,
                             });
@@ -189,6 +192,7 @@ impl eframe::App for WaveSamplerWidgetGUI {
                         // playback mode
                         if let Some(ref mut tx_atom_event) = self.tx_atom_event {
                             let is_sent = tx_atom_event.try_broadcast(AtomEvent {
+                                channel: 0,
                                 event_type: Type::Playback(false),
                                 start: false,
                             });
